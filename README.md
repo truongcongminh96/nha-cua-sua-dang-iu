@@ -70,7 +70,7 @@ tests/                     Kiểm tra hệ thống không cần GPU
 
 ## Thiết kế giao diện
 
-UI theo hướng nhật ký giấy ấm: điều khiển gọn, lời giao diện ngắn và nhật ký chỉ ghi những khoảnh khắc đã gặp. Xem [đặc tả thiết kế](doc/DESIGN.md), [skill UI của dự án](doc/SKILL.md) và [kết quả kiểm chứng](doc/UI-VERIFICATION.md).
+UI theo hướng Xuan Paper với giấy ngà, mực đậm và đỏ dấu: điều khiển gọn, lời giao diện ngắn và nhật ký chỉ ghi những khoảnh khắc đã gặp. Xem [đặc tả thiết kế](doc/DESIGN.md), [skill UI của dự án](doc/SKILL.md) và [kết quả kiểm chứng UI](doc/UI-VERIFICATION.md). Căn nhà 3D là một thư phòng với cửa sổ tròn, khung gỗ mảnh, ghế dài linen, đèn giấy có gân, bàn trà, thảm dệt và bonsai; xem [kiểm chứng cảnh 3D](doc/SCENE-VERIFICATION.md).
 
 ## Mở rộng
 
@@ -91,3 +91,8 @@ Các kiểm tra tự động bao gồm: mọi điểm điều hướng kết n�
 Trình duyệt có WebMCP sẽ được đăng ký các thao tác tùy chọn để đọc trạng thái, đổi không khí và mở đồ vật. Nếu API không có, căn nhà hoạt động bình thường. Chưa có phiên WebMCP được phép truy cập để kiểm tra việc đăng ký và thực thi thực tế.
 
 Đây là phiên bản đầu có đầy đủ luồng tương tác, dùng mô hình procedural, animation theo khớp nhóm và tuyến an toàn khai báo trước. Không có mô phỏng lông, vật lý đầy đủ, thời tiết phức tạp hoặc va chạm giữa nhiều thú cưng. Có thể đưa `dist/` lên dịch vụ static hosting để triển khai.
+
+
+## Màn hình đầu
+
+URL mặc định có hai card **Đi xem phim** / **Vô nhà**. `?page=home` mở trực tiếp căn nhà; `?page=cinema` là trang phim tạm để phát triển sau. Nút chọn lại và Browser Back quay về màn hình chọn. Căn nhà Three.js chỉ tải khi ghé nhà. Giao diện này tiếp tục dùng bảng màu giấy ấm và bản dịch Việt/Trung trong docs.

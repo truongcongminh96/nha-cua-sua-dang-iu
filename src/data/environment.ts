@@ -13,8 +13,8 @@ export const affordances: WorldAffordance[] = [
   { id: 'perch', position: [3.46, 2.2, -.35], capabilities: ['watchable', 'landable', 'jumpable'], label: '最高的小平台' },
   { id: 'cushion', position: [1.63, .57, 1.69], capabilities: ['landable', 'sleepable', 'inspectable'], label: '柔软的靠垫' },
   { id: 'sofa', position: [-2.51, 1.06, -.35], capabilities: ['sleepable', 'landable', 'inspectable'], label: '沙发' },
-  { id: 'shelf-low', position: [-2.12, 1.32, -2.55], capabilities: ['climbable', 'inspectable', 'walkable'], label: '书架' },
-  { id: 'shelf-high', position: [-2.26, 2.91, -2.88], capabilities: ['climbable', 'jumpable', 'inspectable'], label: '书架顶' },
+  { id: 'shelf-low', position: [-1.99, 1.32, -2.5], capabilities: ['climbable', 'inspectable', 'walkable'], label: '书架' },
+  { id: 'shelf-high', position: [-2.72, 2.955, -2.65], capabilities: ['climbable', 'jumpable', 'inspectable'], label: '书架顶' },
   { id: 'window', position: [.69, 1.38, -3.04], capabilities: ['watchable', 'walkable', 'landable'], label: '窗边' },
   { id: 'desk', position: [1.22, 1.43, -2.24], capabilities: ['inspectable', 'walkable', 'jumpable'], label: '小书桌' },
 ];

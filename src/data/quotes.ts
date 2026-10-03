@@ -16,9 +16,9 @@ export const quotes: QuoteDefinition[] = [
 ];
 export interface BookDefinition { id: string; title: string; color: string; quotes: string[]; position: [number, number, number]; rotation: number }
 export const books: BookDefinition[] = [
-  { id: 'slow-days', title: '慢慢来', color: '#8e9c80', quotes: ['slow', 'answers', 'cloud'], position: [-.72, .28, .7], rotation: -.22 },
-  { id: 'little-light', title: '一点点光', color: '#c79362', quotes: ['light', 'tomorrow'], position: [1.9, 1.46, -2.45], rotation: .18 },
-  { id: 'dear-you', title: '亲爱的你', color: '#a4acb2', quotes: ['enough', 'prove'], position: [-2.42, .98, 1.64], rotation: -.15 },
-  { id: 'soft-place', title: '安心停靠', color: '#b98976', quotes: ['rest', 'home'], position: [.5, .28, 1.4], rotation: .5 },
-  { id: 'small-bravery', title: '小小勇气', color: '#a69b6b', quotes: ['begin', 'grow'], position: [-2.6, 1.36, -2.75], rotation: .06 },
+  { id: 'slow-days', title: '慢慢来', color: '#53584b', quotes: ['slow', 'answers', 'cloud'], position: [-.72, .28, .7], rotation: -.22 },
+  { id: 'little-light', title: '一点点光', color: '#938269', quotes: ['light', 'tomorrow'], position: [1.9, 1.46, -2.45], rotation: .18 },
+  { id: 'dear-you', title: '亲爱的你', color: '#777970', quotes: ['enough', 'prove'], position: [-2.42, .98, 1.64], rotation: -.15 },
+  { id: 'soft-place', title: '安心停靠', color: '#6d4940', quotes: ['rest', 'home'], position: [.5, .28, 1.4], rotation: .5 },
+  { id: 'small-bravery', title: '小小勇气', color: '#756f5e', quotes: ['begin', 'grow'], position: [-2.44, 1.325, -2.48], rotation: .06 },
 ];

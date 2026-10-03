@@ -14,6 +14,26 @@ export function ball(parent: Parent, scale: number[], pos: number[], color: stri
   const mesh = new THREE.Mesh(geometry.get('sphere'), mat(color, surface)); mesh.scale.set(scale[0], scale[1], scale[2]);
   mesh.position.set(pos[0], pos[1], pos[2]); mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh;
 }
+/** A pointed, cupped leaf with a raised midrib; shared geometry keeps foliage inexpensive. */
+export function leaf(parent: Parent, size: number[], pos: number[], color: string) {
+  if (!geometry.has('leaf')) {
+    const shape = new THREE.PlaneGeometry(2, 2, 12, 18);
+    const vertices = shape.attributes.position;
+    for (let i = 0; i < vertices.count; i++) {
+      const x = vertices.getX(i), z = vertices.getY(i), taper = Math.pow(Math.sin((z + 1) * Math.PI / 2), .72);
+      vertices.setXYZ(i, x * taper, .07 * taper * (1 - x * x) - .08 * z * z, z);
+    }
+    shape.computeVertexNormals(); geometry.set('leaf', shape);
+  }
+  const key = `${color}:leaf-double`;
+  // A dedicated double-sided material is necessary for the visible underside of swaying leaves.
+  let material = leafMaterials.get(key);
+  if (!material) { material = mat(color, 'leaf').clone(); material.side = THREE.DoubleSide; leafMaterials.set(key, material); }
+  const mesh = new THREE.Mesh(geometry.get('leaf'), material);
+  mesh.scale.set(size[0], size[1], size[2]); mesh.position.set(pos[0], pos[1], pos[2]);
+  mesh.castShadow = mesh.receiveShadow = true; parent.add(mesh); return mesh;
+}
+const leafMaterials = new Map<string, THREE.MeshStandardMaterial>();
 export function cylinder(parent: Parent, r1: number, r2: number, height: number, pos: number[], color: string, surface: Surface = 'plaster') {
   const key = `c${r1},${r2},${height}`;
   if (!geometry.has(key)) geometry.set(key, new THREE.CylinderGeometry(r1, r2, height, 24));

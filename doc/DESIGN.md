@@ -1,8 +1,12 @@
+> **Cảnh 3D mới — 03/10/2026:** Trang `?page=home` đã được dựng lại thành thư phòng giấy ngà: cửa sổ tròn, tường vữa với khung gỗ mảnh màu mực, ghế dài linen, bàn viết chân thanh, bàn trà và sứ, thảm dệt, đèn giấy có gân, tranh cuộn và bonsai. Bảng vật liệu trong `src/world/materials.ts` là chuẩn hiện tại; mô tả rèm, ghế xanh và đèn chụp nón trong phần lịch sử dưới đây đã được thay thế. Xem phần đầu `SCENE-VERIFICATION.md` cho kiểm tra bản mới.
+
+> **Điều chỉnh theo phản hồi 03/10/2026:** UI phải bám bản gốc trong `Downloads/workshop_skills`: giấy `#F6F2E9`, mực `#1C1A17`, đỏ dấu `#B23A2B`, Fraunces + IBM Plex Mono, nét mảnh và hàng mục lục. Các hướng dẫn xanh lá, Lora/Playfair, thẻ bo tròn bên dưới là bản tùy biến cũ, không còn là chuẩn cho lớp UI. Trang vào nhà dùng watermark 家, hai hàng lựa chọn và theme sáng/tối; overlay trong nhà dùng cùng bộ màu, chuyển Night Ink theo thời điểm đêm. Vật liệu và ánh sáng 3D vẫn có hệ riêng. Giữ nội dung Sữa Bea, stack Vite và các luồng hiện có.
+
 # Nhà nhỏ của Sữa Bea — Design specification
 
 > Bản custom cho repo `nha-cua-sua-dang-iu`, cập nhật ngày 03/10/2026.
 > Tham khảo tinh thần giấy ấm, typography và khoảng trống từ DESIGN của NineTails Workshop; nhận diện, nội dung và bố cục dưới đây thuộc Nhà nhỏ của Sữa Bea.
-> Hướng “nhật ký giấy ấm” đã được chọn và triển khai cho UI. Phần trang trí được ghi là tùy chọn vẫn chưa triển khai; xem `UI-VERIFICATION.md` để biết các kiểm tra thực tế.
+> Hướng “nhật ký giấy ấm” đã được chọn và triển khai cho UI. Phần 3D tiếp tục được chỉnh theo mục 12; xem `UI-VERIFICATION.md` và `SCENE-VERIFICATION.md` để biết các kiểm tra thực tế.
 
 ## 1. Ý tưởng và nhận diện
 
@@ -155,7 +159,7 @@ Ba trạng thái `day`, `golden`, `night` điều khiển cả cảnh và màu U
 - Chất liệu / cảnh: `src/world/materials.ts`, `src/world/Room.ts`; thời điểm: `src/systems/TimeOfDay.ts`.
 - Font tải duy nhất qua Google Fonts trong `index.html`, có fallback hệ thống; không dùng `next/font`, App Router hoặc Tailwind.
 - Các đề xuất trang trí trong tài liệu là tùy chọn; ưu tiên khả năng đọc, điều khiển và cảnh 3D trước.
-- Đợt refactor đã sửa UI, lời giao diện và tương phản chữ đọc trên giấy 3D. Giữ nguyên nội dung sách, mô hình, camera, ánh sáng, hành vi thú cưng, asset, khóa lưu trữ và API WebMCP; không cài skill vào Codex hoặc deploy.
+- Đợt refactor UI trước đã sửa UI, lời giao diện và tương phản chữ đọc trên giấy 3D. Giữ nguyên nội dung sách, mô hình, camera, ánh sáng, hành vi thú cưng, asset, khóa lưu trữ và API WebMCP; không cài skill vào Codex hoặc deploy.
 
 ## 10. Kiểm tra khi triển khai giao diện
 
@@ -179,3 +183,63 @@ Ba trạng thái `day`, `golden`, `night` điều khiển cả cảnh và màu U
 | `--seal` | `#A15C3B` | `#A15C3B` | `#E2A77F` |
 
 Locale vẫn đổi qua nhóm ngôn ngữ bên ngoài drawer không modal. Đổi locale hoặc cập nhật nhật ký giữ focus theo hành động/đồ vật và giữ scroll. Mobile ẩn các nhóm nút bị sheet che; đọc sách đặt các nhóm khám phá thành `inert`. Nút đóng drawer ở header cố định, thân panel cuộn riêng. Tooltip nằm trong viewport, toast xuống dòng.
+
+
+## 12. Căn nhà 3D — đã triển khai
+
+### Kiến trúc và tỷ lệ
+
+Giữ căn nhà dạng cắt mở với hai tường, cửa sổ có chiều sâu và góc nhìn orthographic hiện có. Đế nhà mỏng, bo nhỏ; mép sàn liền thay cho nhiều rãnh trang trí. Sàn lát ván so le với khe hẹp, các tấm gỗ có độ sáng gần nhau. Tường vữa ngà có chân tường gỗ, panel sơn xanh ngà thấp và nẹp mảnh dưới đỉnh tường. Không thêm mái che khuất nội thất.
+
+Không chuyển vị trí cửa sổ hoặc các mặt đỡ dành cho Mochi. Giữ vị trí bốn sách và các đồ vật có tương tác. Riêng sách “Can đảm từng chút” được đặt sát mặt bệ đọc và dịch ra trước/phải một chút để tầng kệ phía trên và đèn sàn không che trang. Bệ đọc có thanh đỡ, vẫn giữ điểm leo/đáp của Mochi. Trang trí phải chừa tầm nhìn vào cửa sổ, sách trên kệ và khoảng trống giữa phòng.
+
+### Vật liệu
+
+Texture procedural có nền trắng trung tính để màu vật liệu giữ đúng bảng màu. Vân gỗ là đường mảnh uốn nhẹ, linen là sợi dệt nhỏ, giấy có xơ mịn, vữa có hạt nhẹ. Không phủ một lớp nhiễu màu vàng giống nhau lên tất cả bề mặt. Lá có gân rất nhẹ, hình cong mỏng và hai mặt nhìn được; không còn lá dạng khối cầu dày trong chậu cây.
+
+| Bề mặt | Roughness | Metalness | Bump scale |
+| --- | --- | --- | --- |
+| Gỗ | .72 | 0 | .009 |
+| Linen | 1 | 0 | .012 |
+| Giấy | .96 | 0 | .003 |
+| Vữa | .98 | 0 | .006 |
+| Gốm | .38 | 0 | .001 |
+| Lá | .67 | 0 | 0 |
+| Kim loại | .40 | .65 | .002 |
+| Lông Mochi | 1 | 0 | .007 |
+
+Thông số tập trung trong `surfaceProfiles` tại `src/world/materials.ts`. Dùng lại texture/material/geometry và gộp các mesh tĩnh; không tải asset hoặc thêm thư viện. Các thông số là lựa chọn thị giác, không phải mô phỏng vật liệu đo từ mẫu thật.
+
+### Nội thất có người ở
+
+Kệ gỗ có ruột sách giấy, bìa vải và gáy riêng; sách cao thấp, dày mỏng và nghiêng nhẹ khác nhau. Nhãn gáy chỉ là chi tiết hình học, không đưa thêm nội dung sách giả. Để trống tầng có sách tương tác và đường tiếp cận của Mochi. Tầng giữa nhô nhẹ thành bệ đọc, giữ toàn bộ trang trong tầm nhìn. Chốt nhỏ bằng đồng gợi kết cấu, không thêm nhiều đồ trang trí để lấp đầy kệ.
+
+Giữ sofa sage, chăn linen, gối kem/đất nung, bàn gỗ, đồ gốm và ảnh nhỏ. Chụp đèn có lòng rỗng, viền mảnh và thanh đỡ; không còn hình nón đặc. Cây phía trước nhỏ hơn, lá cong và ít tầng hơn để chừa tầm nhìn vào thảm và đồ vật.
+
+### Ánh sáng và chuyển động
+
+Giữ nền và màu ba thời điểm ở mục 2. Ánh sáng ban ngày / hoàng hôn giảm fill để tách bề mặt và bóng rõ hơn, tránh cảm giác toàn phòng phát sáng. Ban đêm giữ đèn vàng cục bộ và fill lạnh vừa đủ nhìn đồ vật.
+
+| Thời điểm | Sun power | Hemisphere fill | Lamp power | Bulb emissive |
+| --- | --- | --- | --- | --- |
+| Ban ngày | 2.8 | 1.65 | .08 | .1 |
+| Hoàng hôn | 3.15 | 1.35 | .28 | .5 |
+| Ban đêm | .45 | .72 | 3.4 | 2.1 |
+
+Mưa vẫn làm dịu nắng và tăng đèn theo hệ thống hiện có. Chỉ một directional light tạo bóng; point light không thêm shadow map. Chuyển thời điểm vẫn nội suy, giữ đèn đọc sách riêng. `prefers-reduced-motion` dừng đung đưa rèm/lá tại tư thế gốc. Mochi tiếp tục dùng hành vi và tuyến đang có.
+
+Dấu 慢 mờ và dấu 家 nhỏ đã có trên trang giấy đọc được giữ lại; không thêm watermark phủ cảnh. Không sửa tên sách, lời nhắn hoặc dữ liệu lưu trữ trong đợt 3D này.
+
+## 13. Màn hình chọn chỗ ghé — đã triển khai
+
+Theo yêu cầu thêm lối vào trước căn nhà, URL mặc định hiển thị đúng hai card: **Đi xem phim** và **Vô nhà**. Nền giấy ấm `#EEEEE6`, card `#F9F9F0`, xanh sage và đất nung; serif theo locale, tên Sữa Bea bằng Playfair Display. Minh họa SVG nhẹ mô tả màn chiếu/vé và một căn nhà, không tải hình hoặc asset 3D mới.
+
+Desktop đặt hai card cạnh nhau; dưới 640px xếp một cột và cho màn hình cuộn khi cần. Card là liên kết đầy đủ, có focus bàn phím; không dùng chip hoặc nút tròn để chọn điểm đến. Hover chỉ dịch 2px, dùng easing chung 450ms và tắt dịch chuyển khi giảm chuyển động. Có lựa chọn Việt/Trung theo khóa locale hiện có.
+
+- Mặc định hoặc `?page=choose`: hai lựa chọn.
+- `?page=home`: tải và mở căn nhà 3D hiện tại.
+- `?page=cinema`: trang phim tạm, có liên kết vô nhà và chọn lại chỗ ghé; chưa có trình chiếu hoặc danh sách phim.
+
+Dùng liên kết và query URL để reload/Back hoạt động trên static hosting, không thêm router hoặc framework. Chỉ import module căn nhà sau khi chọn Vô nhà. Không lưu lựa chọn điểm đến, nên mỗi lần mở URL mặc định vẫn có hai card.
+
+Kiểm chứng đợt này: build và 18 test hiện có đạt; Chromium kiểm tra 320/390/768/1440px ở hai locale, hai card không cuộn ngang; Enter mở phim, reload trang phim, quay lại và vô nhà; mở sách/Esc trong nhà; Browser Back về lựa chọn; giảm chuyển động tắt hover dịch chuyển. Resource entry xác nhận module `app.ts` chưa tải ở màn hình chọn. Ảnh/script ở `output/playwright/entrance-*`. Chưa kiểm tra Safari/Firefox hoặc thiết bị thật; chưa deploy.

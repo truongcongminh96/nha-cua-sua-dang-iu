@@ -3,13 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#eeeee6" />
+    <meta name="theme-color" content="#f6f2e9" />
     <meta name="description" content="Nhà nhỏ của Sữa Bea. Một căn nhà 3D để đọc sách, nghe mưa, ngắm sóc bay Mochi, hoặc chẳng làm gì cả." />
     <title>Nhà nhỏ của Sữa Bea · Một chút bình yên</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Sans+SC:wght@400;500&family=Noto+Serif+SC:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Ma+Shan+Zheng&amp;family=Noto+Serif+SC:wght@300;400;500;600&amp;display=swap" rel="stylesheet" />
+    <script>
+      (() => {
+        let theme;
+        try { theme = localStorage.getItem('sua-ui-theme'); } catch {}
+        document.documentElement.dataset.theme = theme === 'light' || theme === 'dark' ? theme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
