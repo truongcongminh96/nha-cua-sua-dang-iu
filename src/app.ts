@@ -100,7 +100,7 @@ function leaveFocus() {
 }
 document.querySelector('#leave-focus')!.addEventListener('click', leaveFocus);
 document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; quoteDelay = .76; turning = { entry: active, progress: 0 }; });
-document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); });
+document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); document.querySelector('.instructions')?.classList.remove('faded'); });
 function changeTime(mode: TimeMode) { time.set(mode); ui.setTime(mode); audio.setTime(mode); }
 document.querySelectorAll<HTMLButtonElement>('button[data-time]').forEach(b => b.addEventListener('click', () => changeTime(b.dataset.time as TimeMode)));
 function onKeyDown(e: KeyboardEvent) { if (e.key === 'Escape') { if (journal?.isOpen) journal.close(); else leaveFocus(); } }
@@ -149,7 +149,7 @@ let dragging = false;
 const fingers = new Set<number>();
 canvas.addEventListener('pointerdown', e => { fingers.add(e.pointerId); down.set(e.clientX, e.clientY); dragging = fingers.size > 1; });
 canvas.addEventListener('pointermove', e => {
-  if (down.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) > 5 && e.buttons) dragging = true;
+  if (down.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) > 5 && e.buttons) { dragging = true; document.querySelector('.instructions')?.classList.add('faded'); }
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
   const hit = !active && !dragging && !journal?.isOpen ? interactions.hit(ray, scene) : undefined;
   const tooltip = document.querySelector<HTMLElement>('#tooltip')!; tooltip.hidden = !hit;

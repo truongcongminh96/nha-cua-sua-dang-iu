@@ -201,8 +201,10 @@ export class Room {
     const note = group(board, [.2, .09, .082], 0); note.rotation.z = -.13;
     box(note, [.32, .34, .006], [0, 0, 0], '#e8dca1', .005, 'paper');
     const noteText = this.localizedPlane(note, .29, .3, (ctx, c) => {
-      ctx.fillStyle = '#776b47'; ctx.font = '78px serif'; ctx.textAlign = 'center';
-      ctx.fillText(t('慢慢来'), c.width / 2, c.height * .5, c.width * .9); ctx.font = '42px serif'; ctx.fillText(t('take your time'), c.width / 2, c.height * .73, c.width * .9);
+      ctx.fillStyle = '#776b47'; ctx.font = getLocale() === 'vi' ? '64px "Lora", Georgia, serif' : '78px "Noto Serif SC", serif'; ctx.textAlign = 'center';
+      ctx.fillText(t('慢慢来'), c.width / 2, c.height * .5, c.width * .9);
+      ctx.font = getLocale() === 'vi' ? '36px "Lora", Georgia, serif' : '42px serif';
+      ctx.fillText(t('take your time'), c.width / 2, c.height * .73, c.width * .9);
     }); noteText.position.z = .008;
     ball(note, [.023, .023, .025], [0, .15, .015], '#a17458');
     this.interactions.register({ id: 'hidden-note', label: '一张留给你的便签', object: note, focus: new THREE.Vector3(3.35, 2.86, -3.04), kind: 'memory', quoteIds: ['answers', 'enough'] });
@@ -297,10 +299,13 @@ export class Room {
       box(hinge, [.68, .034, .85], [.33, 0, 0], data.color, .014, 'cloth');
       const cover = this.localizedPlane(hinge, .59, .73, (ctx, c) => {
         ctx.strokeStyle = '#f1e6c9'; ctx.lineWidth = 3; ctx.strokeRect(35, 40, c.width - 70, c.height - 80);
-        ctx.fillStyle = '#fff1d0'; ctx.textAlign = 'center'; ctx.font = '76px serif'; ctx.fillText(t(data.title), c.width / 2, c.height * .4, c.width * .85);
-        ctx.font = '28px serif'; ctx.fillText(t('a little room for yourself'), c.width / 2, c.height * .52, c.width * .85);
+        ctx.fillStyle = '#fff1d0'; ctx.textAlign = 'center';
+        ctx.font = getLocale() === 'vi' ? '62px "Lora", Georgia, serif' : '76px "Noto Serif SC", serif';
+        ctx.fillText(t(data.title), c.width / 2, c.height * .4, c.width * .85);
+        ctx.font = getLocale() === 'vi' ? '26px "Lora", Georgia, serif' : '28px serif';
+        ctx.fillText(t('a little room for yourself'), c.width / 2, c.height * .52, c.width * .85);
         ctx.beginPath(); ctx.arc(c.width / 2, c.height * .71, 42, 0, Math.PI * 2); ctx.stroke();
-        ctx.font = '28px serif'; ctx.fillText('SỮA BEA', c.width / 2, c.height * .89);
+        ctx.font = '28px "Lora", Georgia, serif'; ctx.fillText('SỮA BEA', c.width / 2, c.height * .89);
       });
       cover.rotation.x = -Math.PI / 2; cover.position.set(.33, .019, 0);
       box(book, [.07, .005, .34], [.14, .083, .4], '#be835b', .002, 'cloth');
@@ -374,10 +379,10 @@ export class Room {
     const gradient = ctx.createLinearGradient(0, 0, w, 0); gradient.addColorStop(0, 'rgba(145,115,63,.12)'); gradient.addColorStop(.1, 'rgba(145,115,63,0)');
     ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = '#9e947a'; ctx.textAlign = 'center'; ctx.font = '32px "DM Sans", sans-serif'; ctx.fillText(t('A LITTLE NOTE FOR YOU'), w / 2, h * .19, w * .9);
-    ctx.fillStyle = '#555d4a'; ctx.font = getLocale() === 'vi' ? '88px Georgia, serif' : '96px "Noto Serif SC", serif';
+    ctx.fillStyle = '#555d4a'; ctx.font = getLocale() === 'vi' ? '82px "Lora", Georgia, serif' : '96px "Noto Serif SC", serif';
     zh.split('\n').forEach((line, i) => ctx.fillText(line, w / 2, h * .41 + i * 106, w * .9));
-    ctx.fillStyle = '#8b8775'; ctx.font = getLocale() === 'vi' ? '39px "Noto Serif SC", serif' : 'italic 39px Georgia'; ctx.fillText(en, w / 2, h * .74, w * .91);
-    ctx.fillStyle = '#ada58d'; ctx.font = '31px Georgia'; ctx.fillText('— Sữa Bea —', w / 2, h * .88);
+    ctx.fillStyle = '#8b8775'; ctx.font = getLocale() === 'vi' ? '39px "Noto Serif SC", serif' : 'italic 39px "Lora", Georgia, serif'; ctx.fillText(en, w / 2, h * .74, w * .91);
+    ctx.fillStyle = '#ada58d'; ctx.font = '31px "Lora", Georgia, serif'; ctx.fillText('— Sữa Bea —', w / 2, h * .88);
     this.quoteTexture.needsUpdate = true;
     this.quoteGroup.position.copy(position); this.quoteGroup.rotation.set(0, rotation, 0);
     this.quoteGroup.position.y += book ? .112 : .23;

@@ -76,7 +76,24 @@ export const vietnamese: Record<string, string> = {
   '再试一次': 'Thử lại',
 };
 const storageKey = 'sua-bea.locale.v1';
-function readLocale(): Locale { try { return localStorage.getItem(storageKey) === 'vi' ? 'vi' : 'zh'; } catch { return 'zh'; } }
+function readLocale(): Locale {
+  try {
+    const saved = localStorage.getItem(storageKey);
+    if (saved === 'vi' || saved === 'zh') return saved;
+  } catch {
+    /* Storage disabled or restricted */
+  }
+  try {
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      const navLang = navigator.language.toLowerCase();
+      if (navLang.startsWith('zh')) return 'zh';
+      return 'vi';
+    }
+  } catch {
+    /* Ignore */
+  }
+  return 'vi';
+}
 let locale: Locale = readLocale();
 const listeners = new Set<() => void>();
 export function getLocale() { return locale; }
