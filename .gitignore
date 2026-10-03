@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local UI verification captures and browser fixtures
+output/playwright/
+.playwright-cli/

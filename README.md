@@ -68,6 +68,10 @@ src/
 tests/                     Kiểm tra hệ thống không cần GPU
 ```
 
+## Thiết kế giao diện
+
+UI theo hướng nhật ký giấy ấm: điều khiển gọn, lời giao diện ngắn và nhật ký chỉ ghi những khoảnh khắc đã gặp. Xem [đặc tả thiết kế](doc/DESIGN.md), [skill UI của dự án](doc/SKILL.md) và [kết quả kiểm chứng](doc/UI-VERIFICATION.md).
+
 ## Mở rộng
 
 **Lời nhắn mới:** thêm `QuoteDefinition` trong `data/quotes.ts` rồi đưa ID vào `quoteIds` của sách hoặc đồ vật. Sáu nhóm nội dung: `calm`, `tired`, `courage`, `loneliness`, `tomorrow`, `self-kindness`. Dữ liệu tách khỏi phần dựng hình để thêm ngôn ngữ.

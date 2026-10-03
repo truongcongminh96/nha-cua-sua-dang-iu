@@ -9,7 +9,7 @@ import { quotes } from './data/quotes';
 import { UI, icons } from './ui/UI';
 import { Weather } from './systems/Weather';
 import { RoomAudio } from './systems/Audio';
-import { Discovery } from './systems/Discovery';
+import { Discovery, discoveries } from './systems/Discovery';
 import { Ambience } from './world/Ambience';
 import { Pet, stateLabels } from './pet/Pet';
 import { Navigation } from './pet/Navigation';
@@ -37,15 +37,15 @@ let store: Storage | undefined;
 try { store = localStorage; } catch { /* Browsers may disable device storage. Keep the room usable. */ }
 let journal: Journal | undefined;
 const discovery = new Discovery(store, (count, definition) => {
-  document.querySelector('#discovery-count')!.textContent = String(count);
-  if (definition) ui.toast(`${t('收好一个小瞬间')} · ${t(definition.label)}`);
+  ui.setDiscoveries(count, discoveries.length);
+  if (definition) ui.toast(definition.label);
   journal?.refresh();
 });
 const ambience = new Ambience(scene, id => { if (!camera.focused) discovery.record(id); });
 const navigation = new Navigation(affordances, navigationLinks);
 const residents = pets.map(definition => {
   const pet = new Pet(definition, navigation, (anchor, state) => {
-    document.querySelector('#pet-status')!.textContent = t(stateLabels[state]);
+    ui.setPetState(state);
     if (!camera.focused && state === 'glide') discovery.record('pet-glide');
     if (!camera.focused && anchor === 'window' && state === 'idle') discovery.record('pet-window');
     if (state === 'jump' || state === 'sleep') audio.cloth();
@@ -72,6 +72,7 @@ function showPage() {
   document.querySelector('#world-canvas')!.setAttribute('aria-label', `${t(active.label)}. ${quote[getLocale()].replace('\n', ' ')}`);
 }
 function activate(entry: InteractableDefinition) {
+  ui.dismissInstructions();
   if (entry.kind === 'pet') {
     const pet = residents.find(pet => pet.definition.id === entry.id)!;
     ui.toast(`${pet.definition.name} ${t(stateLabels[pet.state])}. ${t('陪它一会儿吧。')}`);
@@ -100,7 +101,7 @@ function leaveFocus() {
 }
 document.querySelector('#leave-focus')!.addEventListener('click', leaveFocus);
 document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; quoteDelay = .76; turning = { entry: active, progress: 0 }; });
-document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); document.querySelector('.instructions')?.classList.remove('faded'); });
+document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); ui.showInstructions(); });
 function changeTime(mode: TimeMode) { time.set(mode); ui.setTime(mode); audio.setTime(mode); }
 document.querySelectorAll<HTMLButtonElement>('button[data-time]').forEach(b => b.addEventListener('click', () => changeTime(b.dataset.time as TimeMode)));
 function onKeyDown(e: KeyboardEvent) { if (e.key === 'Escape') { if (journal?.isOpen) journal.close(); else leaveFocus(); } }
@@ -114,15 +115,13 @@ function updateSoundButton() {
 soundButton.addEventListener('click', async () => {
   try {
     const enabled = await audio.toggle(); updateSoundButton();
-    ui.toast(enabled ? '一点风声，一点生活的声音。' : '静静待着，也很好。');
+    ui.toast(enabled ? '声音已打开' : '声音已关闭');
   } catch { ui.toast('浏览器暂时无法播放声音，可以稍后再试。'); }
 });
 function changeWeather() {
   const raining = weather.toggle() === 'rain'; audio.setWeather(raining);
-  document.querySelector('#weather')!.setAttribute('aria-pressed', String(raining));
-  document.querySelector('#weather')!.setAttribute('aria-label', t(raining ? '切换晴天' : '切换下雨'));
-  document.querySelector('#weather-label')!.textContent = t(raining ? '窗外落雨，屋里很暖' : '微风，和一点安静');
-  ui.toast(raining ? '让雨替你，把世界的声音放轻。' : '雨停了，光又慢慢回来了。');
+  ui.setWeather(raining);
+  ui.toast(raining ? '正在下雨' : '雨停了');
 }
 document.querySelector('#weather')!.addEventListener('click', changeWeather);
 journal = new Journal(discovery, interactions, id => { const entry = interactions.get(id); if (entry) activate(entry); }, () => { audio.music = !audio.music; if (audio.music && !audio.on) ui.toast('轻音乐已准备好，打开右上角声音即可聆听。'); return audio.music; }, () => audio.music);
@@ -130,10 +129,8 @@ journal = new Journal(discovery, interactions, id => { const entry = interaction
 function refreshLanguage() {
   ui.refreshLanguage(); ui.setTime(time.mode); updateSoundButton();
   const raining = weather.mode === 'rain';
-  document.querySelector('#weather-label')!.textContent = t(raining ? '窗外落雨，屋里很暖' : '微风，和一点安静');
-  const weatherButton = document.querySelector<HTMLElement>('#weather')!;
-  weatherButton.setAttribute('aria-label', t(raining ? '切换晴天' : '切换下雨')); weatherButton.title = t('听一场雨');
-  document.querySelector('#pet-status')!.textContent = t(stateLabels[residents[0].state]);
+  ui.setWeather(raining);
+  ui.setPetState(residents[0].state);
   room.refreshLanguage(); journal?.refresh();
   if (active) { ui.focus(active.label, (active.quoteIds?.length ?? 0) > 1); if (quoteDelay <= 0) showPage(); }
   else canvas.setAttribute('aria-label', t('可探索的三维小屋'));
@@ -149,11 +146,11 @@ let dragging = false;
 const fingers = new Set<number>();
 canvas.addEventListener('pointerdown', e => { fingers.add(e.pointerId); down.set(e.clientX, e.clientY); dragging = fingers.size > 1; });
 canvas.addEventListener('pointermove', e => {
-  if (down.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) > 5 && e.buttons) { dragging = true; document.querySelector('.instructions')?.classList.add('faded'); }
+  if (down.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) > 5 && e.buttons) { dragging = true; ui.dismissInstructions(); }
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
   const hit = !active && !dragging && !journal?.isOpen ? interactions.hit(ray, scene) : undefined;
   const tooltip = document.querySelector<HTMLElement>('#tooltip')!; tooltip.hidden = !hit;
-  if (hit) { tooltip.textContent = t(hit.label); tooltip.style.left = `${e.clientX}px`; tooltip.style.top = `${e.clientY - 12}px`; }
+  if (hit) ui.showTooltip(hit.label, e.clientX, e.clientY);
   canvas.style.cursor = hit ? 'pointer' : dragging ? 'grabbing' : 'grab';
 });
 canvas.addEventListener('pointerup', e => {
@@ -163,6 +160,7 @@ canvas.addEventListener('pointerup', e => {
   const hit = interactions.hit(ray, scene); if (hit) activate(hit);
   (document.querySelector('#tooltip') as HTMLElement).hidden = true;
 });
+canvas.addEventListener('wheel', () => ui.dismissInstructions(), { passive: true });
 canvas.addEventListener('pointercancel', e => { fingers.delete(e.pointerId); dragging = true; });
 canvas.addEventListener('pointerleave', () => { (document.querySelector('#tooltip') as HTMLElement).hidden = true; });
 const clock = new THREE.Clock(); let elapsed = 0;
@@ -180,7 +178,7 @@ renderer.setAnimationLoop(() => {
   if (closing) { closeAmount = THREE.MathUtils.damp(closeAmount, 0, 5, dt); closing.open?.(closeAmount); if (closeAmount < .005) closing = undefined; }
   if (quoteDelay > 0) { quoteDelay -= dt; if (quoteDelay <= 0) { showPage(); document.querySelector<HTMLButtonElement>('#leave-focus')?.focus({ preventScroll: true }); } }
   petReadoutTimer += dt;
-  if (petReadoutTimer > 30) { petReadoutTimer = 0; document.querySelector('#discovery-count')!.textContent = String(discovery.count); }
+  if (petReadoutTimer > 30) { petReadoutTimer = 0; ui.setDiscoveries(discovery.count, discoveries.length); journal?.refresh(); }
   renderer.render(scene, camera.camera);
 });
 ui.ready();

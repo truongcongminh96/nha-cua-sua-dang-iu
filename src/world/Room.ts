@@ -378,11 +378,11 @@ export class Room {
     ctx.fillStyle = '#f6edd8'; ctx.fillRect(0, 0, w, h);
     const gradient = ctx.createLinearGradient(0, 0, w, 0); gradient.addColorStop(0, 'rgba(145,115,63,.12)'); gradient.addColorStop(.1, 'rgba(145,115,63,0)');
     ctx.fillStyle = gradient; ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#9e947a'; ctx.textAlign = 'center'; ctx.font = '32px "DM Sans", sans-serif'; ctx.fillText(t('A LITTLE NOTE FOR YOU'), w / 2, h * .19, w * .9);
-    ctx.fillStyle = '#555d4a'; ctx.font = getLocale() === 'vi' ? '82px "Lora", Georgia, serif' : '96px "Noto Serif SC", serif';
-    zh.split('\n').forEach((line, i) => ctx.fillText(line, w / 2, h * .41 + i * 106, w * .9));
-    ctx.fillStyle = '#8b8775'; ctx.font = getLocale() === 'vi' ? '39px "Noto Serif SC", serif' : 'italic 39px "Lora", Georgia, serif'; ctx.fillText(en, w / 2, h * .74, w * .91);
-    ctx.fillStyle = '#ada58d'; ctx.font = '31px "Lora", Georgia, serif'; ctx.fillText('— Sữa Bea —', w / 2, h * .88);
+    ctx.fillStyle = '#30382b'; ctx.textAlign = 'center'; ctx.font = '42px "DM Sans", sans-serif'; ctx.fillText(t('A LITTLE NOTE FOR YOU'), w / 2, h * .19, w * .9);
+    ctx.fillStyle = '#151e12'; ctx.font = getLocale() === 'vi' ? '500 110px "Lora", Georgia, serif' : '500 124px "Noto Serif SC", serif';
+    zh.split('\n').forEach((line, i) => ctx.fillText(line, w / 2, h * .40 + i * 140, w * .9));
+    ctx.fillStyle = '#283122'; ctx.font = getLocale() === 'vi' ? '500 56px "Noto Serif SC", serif' : 'italic 500 56px "Lora", Georgia, serif'; ctx.fillText(en, w / 2, h * .74, w * .91);
+    ctx.fillStyle = '#30382b'; ctx.font = '40px "Lora", Georgia, serif'; ctx.fillText('— Sữa Bea —', w / 2, h * .88);
     this.quoteTexture.needsUpdate = true;
     this.quoteGroup.position.copy(position); this.quoteGroup.rotation.set(0, rotation, 0);
     this.quoteGroup.position.y += book ? .112 : .23;
