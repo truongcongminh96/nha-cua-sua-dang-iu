@@ -5,6 +5,7 @@ export const vietnamese: Record<string, string> = {
   '一起看电影': 'Đi xem phim', '进屋坐坐': 'Vô nhà',
   '留一点时间，给银幕里的故事。': 'Dành một chút thời gian cho một câu chuyện.',
   '翻翻书，听听雨，陪 Mochi 待一会儿。': 'Đọc sách, nghe mưa, ngồi chơi với Mochi.',
+  '两个人的私人影院': 'Phòng xem riêng cho hai người',
   '小影院正在准备中': 'Rạp phim nhỏ đang được chuẩn bị', '小屋的灯已经亮了': 'Căn nhà đang chờ bạn',
   '小影院还在布置中。': 'Rạp phim nhỏ sắp mở.',
   '电影还没开场。先来小屋坐一会儿吧。': 'Phim chưa chiếu đâu. Bạn có thể ghé nhà ngồi chơi trước nhé.',

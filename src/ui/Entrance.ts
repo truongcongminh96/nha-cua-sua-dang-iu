@@ -27,7 +27,7 @@ export function showEntrance(container: HTMLElement, cinema = false) {
         <a class="destination-card" href="?page=cinema">
           <span class="destination-number" aria-hidden="true">一</span>
           <div class="destination-copy"><h2>一起看电影</h2><p>留一点时间，给银幕里的故事。</p></div>
-          <span class="destination-note">小影院正在准备中</span><i class="destination-arrow" data-lucide="arrow-up-right"></i>
+          <span class="destination-note">两个人的私人影院</span><i class="destination-arrow" data-lucide="arrow-up-right"></i>
         </a>
         <a class="destination-card" href="?page=home">
           <span class="destination-number" aria-hidden="true">二</span>

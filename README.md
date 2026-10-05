@@ -2,7 +2,7 @@
 
 *A little house that heals with you.*
 
-Một căn nhà 3D để đọc sách, nghe mưa và ngắm sóc bay Mochi. Sử dụng **Vite + TypeScript + Three.js**, không cần backend hoặc tài khoản.
+Một căn nhà 3D để đọc sách, nghe mưa và ngắm sóc bay Mochi. Căn nhà sử dụng **Vite + TypeScript + Three.js**, không cần backend hoặc tài khoản. Nhánh **Milk Cinema** dùng Supabase để hai người xem phim cùng nhau.
 
 ## Chạy tại máy
 
@@ -95,4 +95,64 @@ Trình duyệt có WebMCP sẽ được đăng ký các thao tác tùy chọn đ
 
 ## Màn hình đầu
 
-URL mặc định có hai card **Đi xem phim** / **Vô nhà**. `?page=home` mở trực tiếp căn nhà; `?page=cinema` là trang phim tạm để phát triển sau. Nút chọn lại và Browser Back quay về màn hình chọn. Căn nhà Three.js chỉ tải khi ghé nhà. Giao diện này tiếp tục dùng bảng màu giấy ấm và bản dịch Việt/Trung trong docs.
+URL mặc định có hai card **Đi xem phim** / **Vô nhà**. `?page=home` mở trực tiếp căn nhà; `?page=cinema` mở **Milk Cinema**, phòng xem phim riêng cho hai người. Nút chọn lại và Browser Back quay về màn hình chọn. Căn nhà Three.js chỉ tải khi ghé nhà. Giao diện này tiếp tục dùng bảng màu giấy ấm và bản dịch Việt/Trung trong docs.
+
+Đặc tả **Milk Cinema** nằm trong [doc/CINEMA.md](doc/CINEMA.md). Cinema tải riêng trong cùng repo Vite; căn nhà 3D giữ luồng hiện có. Supabase cung cấp danh tính ẩn danh, dữ liệu phòng/chat và Realtime; video phát trực tiếp từ nguồn đã chọn.
+
+
+## Milk Cinema
+
+Mở `http://localhost:5173/?page=cinema` hoặc chọn **Đi xem phim** từ trang chủ. Chọn **Sữa** hoặc **Xiiu**, nhập mã chung **300492** rồi vào cùng một phòng. Hai phim R2 đã được cấu hình sẵn; không cần tạo phòng, dán nguồn phim hay gửi liên kết mời. Hai người có thể phát/dừng/tua, trò chuyện và gửi cảm xúc. Dùng hai thiết bị hoặc hai browser profile riêng vì danh tính anonymous được lưu theo trình duyệt.
+
+Player có điều khiển riêng, âm lượng, toàn màn hình, tiến độ, tua 10 giây và phím Space / ← / → / M / F. Chat trên điện thoại mở thành bottom sheet. Giao diện hỗ trợ Việt/Trung và sáng/tối. Khi browser chặn autoplay, bấm **Chạm để bắt đầu xem**. Khi chủ phòng vắng, shared controls chờ chủ phòng kết nối lại.
+
+### Supabase setup
+
+Xem [supabase/README.md](supabase/README.md) cho local CLI và hosted project. Cách chạy local:
+
+```sh
+supabase start
+supabase status
+supabase migration up --local
+cp .env.example .env.local
+# Điền API URL và Publishable key từ supabase status vào .env.local.
+pnpm install
+pnpm dev
+```
+
+```env
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_PUBLISHABLE_KEY=<publishable key>
+```
+
+Không dùng secret key/service-role key trong frontend. Bật Anonymous Sign-Ins và áp dụng tất cả migration trong `supabase/migrations/`; khi dùng hosted project, tắt public Realtime access. Không có yêu cầu đăng nhập Google. Khi thiếu cấu hình, form thông báo setup; trang chủ/căn nhà vẫn dùng được.
+
+### Phim trên Cloudflare R2
+
+Bạn tự upload phim lên R2 bên ngoài ứng dụng. Cinema phát trực tiếp URL public của object trong HTML5 video; không proxy phim qua Supabase/Vite và không cần R2 access key phía trình duyệt. Khuyến nghị MP4 H.264/AAC. URL public truy cập được bởi ai có link, độc lập với quyền vào phòng.
+
+Mã chung được cấu hình trong migration `202610050001_shared_cinema.sql`. Hai phim mặc định nằm trong `public.cinema_movies`, seeded bởi `202610050002_cinema_movies.sql`. Trong phòng, chọn **Phim 01** hoặc **Phim 02**; nguồn phim đổi cho cả hai người, bắt đầu lại từ đầu và giữ chat. Phim đang chọn được lưu trong database để lần vào sau dùng cùng nguồn.
+
+Muốn bổ sung/đổi tên phim, dùng SQL quản trị trên catalog. URL cần là video public phát trực tiếp:
+
+```sql
+update public.cinema_movies set title = 'Tên phim của bạn' where position = 1;
+-- Upload bên ngoài Cinema trước khi thêm một nguồn mới:
+-- insert into public.cinema_movies(position,title,video_url) values (3,'Phim 03','https://media.example.com/movie.mp4');
+```
+
+Dùng Public Development URL (`r2.dev`) để thử, custom domain media khi dùng production. Google Drive parser vẫn được giữ cho dữ liệu cũ, nhưng không còn trong giao diện chính. Signed playback URL và giao diện quản lý catalog là phạm vi tương lai.
+
+### Kiểm tra
+
+```sh
+pnpm lint
+pnpm test
+pnpm build
+pnpm test:cinema:backend  # Kiểm tra backend phòng kiểu cũ.
+pnpm test:cinema:shared   # Kiểm tra mã, hai tên, thay phiên và RLS; chỉ chạy ở development.
+```
+
+Xem [doc/CINEMA-VERIFICATION.md](doc/CINEMA-VERIFICATION.md) cho kết quả thực tế và giới hạn. Migration mới đã được áp dụng local; chưa triển khai lên hosting.
+
+Mỗi tên có một chỗ cố định. Đăng nhập cùng tên ở trình duyệt khác thay phiên cũ và giữ lịch sử chat; phiên cũ rời phòng ở lần kiểm tra membership kế tiếp (mỗi 5 giây). Một browser identity không thể chọn cả hai tên. Người đầu tiên vào phòng phối hợp đồng bộ; host đi theo chỗ đó khi đổi trình duyệt. Mã chung dành cho hai người tin cậy, không phải hai tài khoản riêng biệt. Khi cả hai reload cùng lúc, cần chọn lại vị trí phim nếu không còn client giữ trạng thái.

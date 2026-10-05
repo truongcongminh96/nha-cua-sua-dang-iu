@@ -1,0 +1,2 @@
+-- Rooms and identities are created through the authenticated cinema RPCs.
+-- No public demo rooms or invitation secrets are seeded.
