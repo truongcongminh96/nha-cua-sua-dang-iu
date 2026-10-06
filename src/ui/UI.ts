@@ -4,6 +4,7 @@ import { localize } from './localize';
 import type { TimeMode } from '../systems/TimeOfDay';
 import type { PetState } from '../pet/types';
 import { petStatuses, roomStatuses } from './copy';
+import { setThemeColor } from './theme';
 
 export function icons() {
   createIcons({ icons: { House, Sun, Sunset, Moon, Volume2, VolumeX, RotateCcw, BookOpen, X, ArrowLeft, ArrowRight, CloudRain, Info }, attrs: { 'stroke-width': 1.5, 'aria-hidden': 'true' } });
@@ -17,6 +18,7 @@ export class UI {
       <div class="world" role="application" aria-label="Sữa Bea 的互动小屋。拖动旋转，滚轮缩放。也可以从小屋介绍中使用物件按钮。"><canvas id="world-canvas" data-live-copy aria-label="可探索的三维小屋" tabindex="0"></canvas></div>
       <main class="ui">
         <header class="brand" data-exploration>
+          <a class="back-home" href="?page=choose"><i data-lucide="arrow-left"></i><span>返回首页</span></a>
           <div class="brand-caption"><i data-lucide="house"></i><span>一间小屋</span></div>
           <h1 aria-label="Sữa Bea 的小屋">Sữa Bea</h1>
           <p class="status" id="room-status" data-live-copy></p>
@@ -29,8 +31,8 @@ export class UI {
             <button data-time="night" aria-pressed="false" aria-label="夜晚" title="夜晚"><i data-lucide="moon"></i><span>夜晚</span></button>
           </div>
         </nav>
-        <div class="language-control" role="group" aria-label="中文 / Tiếng Việt" data-live-copy>
-          <button data-locale="zh" lang="zh-CN" aria-pressed="false">中文</button><span aria-hidden="true">/</span><button data-locale="vi" lang="vi" aria-pressed="false">Tiếng Việt</button>
+        <div class="language-control lang-switch" role="group" aria-label="中文 / Tiếng Việt" data-live-copy>
+          <button data-locale="vi" lang="vi" aria-label="Tiếng Việt" aria-pressed="false">VI</button><span aria-hidden="true">/</span><button data-locale="zh" lang="zh-CN" aria-label="中文" aria-pressed="false">中文</button>
         </div>
         <div class="pet-status" data-exploration><strong>Mochi</strong><span id="pet-status" data-live-copy></span></div>
         <div class="lower-left" data-exploration>
@@ -65,6 +67,7 @@ export class UI {
   }
   setTime(mode: TimeMode) {
     document.body.dataset.time = mode;
+    setThemeColor(mode === 'night' ? 'dark' : 'light');
     document.querySelector('#room-status')!.textContent = t(roomStatuses[mode]);
     document.querySelectorAll<HTMLButtonElement>('button[data-time]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.time === mode)));
   }

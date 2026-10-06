@@ -3,10 +3,11 @@ import './ui/styles.css';
 import * as THREE from 'three';
 import { Room } from './world/Room';
 import { CameraRig } from './systems/Camera';
-import { TimeOfDay, type TimeMode } from './systems/TimeOfDay';
+import { TimeOfDay, initialTimeMode, type TimeMode } from './systems/TimeOfDay';
 import { InteractableRegistry, type InteractableDefinition } from './systems/Interactable';
 import { quotes } from './data/quotes';
 import { UI, icons } from './ui/UI';
+import { applyTheme } from './ui/theme';
 import { Weather } from './systems/Weather';
 import { RoomAudio } from './systems/Audio';
 import { Discovery, discoveries } from './systems/Discovery';
@@ -27,7 +28,7 @@ const scene = new THREE.Scene();
 const interactions = new InteractableRegistry();
 const room = new Room(scene, interactions);
 const camera = new CameraRig(canvas);
-const time = new TimeOfDay(scene, room); ui.setTime(time.mode);
+const time = new TimeOfDay(scene, room, initialTimeMode()); ui.setTime(time.mode);
 if (matchMedia('(pointer: coarse)').matches) { renderer.setPixelRatio(Math.min(devicePixelRatio, 1.4)); time.sunlight.shadow.mapSize.set(1024, 1024); }
 const readingLight = new THREE.SpotLight('#fff0ce', 0, 8, .58, .9, 1.5);
 scene.add(readingLight, readingLight.target);
@@ -103,7 +104,9 @@ document.querySelector('#leave-focus')!.addEventListener('click', leaveFocus);
 document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; quoteDelay = .76; turning = { entry: active, progress: 0 }; });
 document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); ui.showInstructions(); });
 function changeTime(mode: TimeMode) { time.set(mode); ui.setTime(mode); audio.setTime(mode); }
-document.querySelectorAll<HTMLButtonElement>('button[data-time]').forEach(b => b.addEventListener('click', () => changeTime(b.dataset.time as TimeMode)));
+// An explicit time choice carries back to the entrance and cinema as the site theme.
+function rememberTheme(mode: TimeMode) { applyTheme(mode === 'night' ? 'dark' : 'light'); }
+document.querySelectorAll<HTMLButtonElement>('button[data-time]').forEach(b => b.addEventListener('click', () => { changeTime(b.dataset.time as TimeMode); rememberTheme(b.dataset.time as TimeMode); }));
 function onKeyDown(e: KeyboardEvent) { if (e.key === 'Escape') { if (journal?.isOpen) journal.close(); else leaveFocus(); } }
 window.addEventListener('keydown', onKeyDown);
 const soundButton = document.querySelector<HTMLButtonElement>('#sound')!;

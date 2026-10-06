@@ -1,3 +1,4 @@
+import './ui/tokens.css';
 import './ui/styles.css';
 import { getLocale, t } from './data/i18n';
 const page = new URLSearchParams(location.search).get('page');

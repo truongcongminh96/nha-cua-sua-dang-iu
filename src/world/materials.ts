@@ -88,17 +88,18 @@ export function mat(color: THREE.ColorRepresentation, surface: Surface = 'plaste
   return materials.get(key)!;
 }
 
+// Honey wood, cream plaster and soft sage, matching the Cute Xuan Paper entrance painting.
 export const palette = {
-  wood: '#a99a7c',
-  lightWood: '#d8ccb4',
-  darkWood: '#484237',
-  wall: '#f0eadf',
-  cream: '#e8e0ce',
+  wood: '#c49a6c',
+  lightWood: '#e4cda5',
+  darkWood: '#9b7149',
+  wall: '#f6eddd',
+  cream: '#efe1c5',
   paper: '#f6f2e9',
-  ink: '#292923',
-  sage: '#89927b',
-  moss: '#596650',
-  blue: '#999b91',
+  ink: '#6a5140',
+  sage: '#a3b18c',
+  moss: '#7f9369',
+  blue: '#a9b2a6',
   terracotta: '#b23a2b',
-  orange: '#b89b72',
+  orange: '#d0a471',
 };
