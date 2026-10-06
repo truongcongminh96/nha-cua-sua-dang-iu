@@ -25,7 +25,7 @@ export class CameraRig {
   resize(width: number, height: number) {
     const aspect = width / height;
     this.aspect = aspect;
-    this.baseExtent = aspect < .8 ? 5.7 / aspect : aspect < 1.3 ? 6.4 : 5.05;
+    this.baseExtent = aspect < .8 ? 5.3 / aspect : aspect < 1.3 ? 6.4 : 5.05;
     this.camera.left = -this.baseExtent * aspect; this.camera.right = this.baseExtent * aspect;
     this.camera.top = this.baseExtent; this.camera.bottom = -this.baseExtent; this.camera.updateProjectionMatrix();
   }

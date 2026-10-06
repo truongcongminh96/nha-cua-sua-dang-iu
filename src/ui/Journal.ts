@@ -1,5 +1,6 @@
 import { getLocale, t } from '../data/i18n';
 import { localize } from './localize';
+import { discoverySeals } from './copy';
 import { discoveries, localDate, type Discovery } from '../systems/Discovery';
 import type { InteractableRegistry } from '../systems/Interactable';
 import { icons } from './UI';
@@ -74,8 +75,14 @@ export class Journal {
     const header = `<header class="drawer-header"><div><time data-live-copy datetime="${localDate(date)}">${dateLabel}</time><h2 id="drawer-title">${heading}</h2></div><button class="icon-button close" data-action="close" aria-label="关闭面板"><i data-lucide="x"></i></button></header>`;
     if (this.mode === 'collection') {
       const seen = discoveries.filter(d => this.discovery.has(d.id));
+      // An album leaf (册页): twelve seal slots, stamped as moments are found; empty slots keep a gentle hint.
+      const album = discoveries.map(d => {
+        const found = this.discovery.has(d.id);
+        return `<li class="seal-slot${found ? ' found' : ''}" data-moment="${d.id}"><span class="${found ? 'seal-chip' : 'seal-empty'}" aria-hidden="true">${discoverySeals[d.id] ?? '印'}</span><span class="seal-caption">${found ? d.label : d.hint}</span>${found ? '' : '<span class="visually-hidden">还没找到</span>'}</li>`;
+      }).join('');
       this.drawer.innerHTML = `${header}<div class="drawer-body">
-        ${seen.length ? `<ul class="moment-list">${seen.map(d => `<li data-moment="${d.id}">${d.label}</li>`).join('')}</ul>` : '<div class="empty-journal"><p>今天还没有记录。</p><p>可以翻一本书，或陪 Mochi 待一会儿。</p></div>'}
+        ${seen.length ? '' : '<div class="empty-journal"><p>今天还没有记录。</p><p>可以翻一本书，或陪 Mochi 待一会儿。</p></div>'}
+        <ul class="seal-album">${album}</ul>
         <footer class="drawer-footer"><p class="moment-summary" data-live-copy>${this.discovery.count} / ${discoveries.length} · ${t('小小的记录')}</p><p>${this.discovery.persistent ? '手记只保存在这台设备里，每天轻轻翻开新的一页。' : '这次的发现会留在当前页面里。浏览器暂时无法保存手记。'}</p></footer>
       </div>`;
     } else {

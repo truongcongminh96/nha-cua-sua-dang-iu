@@ -62,3 +62,19 @@ Các chi tiết kiểu Nhật được thay bằng đồ vật thư phòng Giang
 | Bình cắm hoa ikebana | Mai bình men ngọc cắm một cành mai |
 
 Kiểm chứng (06/10/2026): build, lint, test 26/26. Số mesh trước khi gộp là 1154, sau khi gộp còn 183 (bản trước là 165). Đã thử trên Chromium ở 1440px (ngày, hoàng hôn, đêm, phóng gần) và 390px (hoàng hôn). Không có lỗi trên trang.
+
+## Căn nhà: giao diện (giai đoạn 3)
+
+- **Header** giống trang chọn cửa: "← Về trang chủ │ SỮA BEA 家" và dòng trạng thái in nghiêng. Nút ngôn ngữ đứng riêng ở góc phải nên vẫn bấm được khi đang đọc.
+- **Thanh dấu triện** ở giữa đáy màn hình: 日 昏 夜 │ 雨 音 │ 册 回 序. Nút đang bật thành ô triện đỏ đặc. Màn hình rộng có nhãn chữ dưới mỗi nút; mobile chỉ hiện chữ Hán và trải hết bề ngang.
+- **Rê chuột vào đồ vật:** một vòng mực elip dẹt (theo góc nhìn nghiêng) vẽ dần quanh đồ vật, có thêm một nét phụ màu đỏ triện; nhãn tên có dấu kim cương đỏ nằm ngay phía trên vòng.
+- **Hướng dẫn lần đầu:** 3 bước (看 ngắm, 圈 chạm, 册 sổ). Xong thì lưu `sua-house-guide`.
+- **Đọc:** lời nhắn hiện trên trang giấy HTML cạnh đồ vật (mobile: phía dưới), sắc nét, chọn được chữ, trình đọc màn hình đọc được. "Đọc thêm một trang" lật trang giấy. Hàm `Room.showQuote` vẫn giữ để test kiểm tra trang không bị che.
+- **Sổ 册:** 12 ô dấu. Khám phá được thì đóng dấu chữ Hán riêng (慢 光 信 安 勇 笺 远 曲 忆 窗 翔 星); ô chưa có hiện gợi ý. Khám phá mới hiện thông báo kèm hiệu ứng đóng dấu. Khi đang đọc, thông báo lên phía trên để không che trang.
+- **Đồ vật Trung Hoa thêm:**
+  - Đôn sứ men ngọc (绣墩) có đinh tán và mặt thêu chữ 福 thay nệm tròn; Mochi vẫn đáp lên được.
+  - Ghế kê chân (脚踏) có quạt xếp thay đôi dép.
+  - Trúc trong chậu sứ trắng xanh thay bonsai.
+  - Hoa văn mây trên thảm đậm hơn.
+- **Mobile:** camera màn hình dọc phóng gần hơn (`5.3 / aspect`). Trạng thái Mochi nằm dưới header.
+- **Kiểm chứng (06/10/2026):** build, lint, test 26/26, số mesh sau khi gộp là 204. Chromium 1440px: hướng dẫn, rê chuột, sổ, đọc và lật trang. 390px: thanh dấu triện, đọc, không tràn ngang. Không có lỗi trên trang.

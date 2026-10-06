@@ -117,8 +117,8 @@ export class Room {
     tube(this.root, [[1.99, 1.74, -3.04], [1.94, 1.98, -3.04], [2.06, 2.2, -3.03], [2.2, 2.3, -3.02]], .011, p.darkWood, 'wood');
     tube(this.root, [[1.95, 1.95, -3.04], [1.84, 2.08, -3.03], [1.8, 2.16, -3.02]], .007, p.darkWood, 'wood');
     for (const [x, y] of [[1.93, 2.0], [2.03, 2.14], [2.1, 2.24], [2.19, 2.29], [1.84, 2.09], [1.8, 2.16], [2.0, 2.08]]) {
-      ball(this.root, [.03, .03, .018], [x, y, -3.01], '#f3d9d2', 'paper');
-      ball(this.root, [.008, .008, .008], [x, y, -2.995], p.terracotta);
+      ball(this.root, [.028, .028, .016], [x, y, -3.01], '#f1cfc8', 'paper');
+      ball(this.root, [.005, .005, .005], [x, y, -2.996], '#c98a3a');
     }
   }
 
@@ -295,16 +295,34 @@ export class Room {
     box(rug, [3.45, .055, 2.58], [0, 0, 0], '#5f6b78', .012, 'cloth');
     const weave = canvasPlane(rug, 3.36, 2.49, (ctx, c) => this.paintRug(ctx, c.width, c.height));
     weave.rotation.x = -Math.PI / 2; weave.position.y = .0285; weave.userData.ignoreRaycast = true;
-    const cushion = group(this.root, [1.63, .35, 1.69], -.15);
-    cylinder(cushion, .51, .53, .27, [0, 0, 0], p.ink, 'cloth');
-    cylinder(cushion, .49, .49, .13, [0, .135, 0], '#b6ab96', 'cloth');
-    cylinder(cushion, .025, .025, .012, [0, .206, 0], p.ink, 'cloth');
-    const slippers = group(this.root, [-1.4, .24, 2.31], .6);
-    for (let i = 0; i < 2; i++) {
-      const slipper = group(slippers, [i * .3, 0, i * .12], i * .15);
-      box(slipper, [.24, .035, .48], [0, 0, 0], p.darkWood, .06, 'wood');
-      ball(slipper, [.12, .07, .15], [0, .055, -.08], p.paper, 'cloth');
+    // A celadon drum stool (绣墩) with studs and an embroidered top; Mochi still lands on it.
+    const stool = group(this.root, [1.63, .2, 1.69], -.15);
+    const drum = [[0, 0], [.3, 0], [.34, .06], [.38, .17], [.34, .29], [.3, .35], [0, .35]].map(([r, y]) => new THREE.Vector2(r, y));
+    const barrel = new THREE.Mesh(new THREE.LatheGeometry(drum, 40), mat('#a9b8a2', 'ceramic'));
+    barrel.castShadow = barrel.receiveShadow = true; stool.add(barrel);
+    for (const [y, r] of [[.05, .325], [.3, .325]]) {
+      const band = new THREE.Mesh(new THREE.TorusGeometry(r, .014, 6, 40), mat('#e9dfc9', 'ceramic')); band.rotation.x = Math.PI / 2; band.position.y = y; stool.add(band);
+      for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; ball(stool, [.014, .014, .014], [Math.cos(a) * (r + .012), y + (y < .1 ? .03 : -.03), Math.sin(a) * (r + .012)], '#6d716b', 'metal'); }
     }
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2 + .4, window = new THREE.Mesh(new THREE.CircleGeometry(.08, 24), mat('#7f9178', 'ceramic'));
+      window.position.set(Math.cos(a) * .382, .17, Math.sin(a) * .382); window.lookAt(Math.cos(a) * 2, .17, Math.sin(a) * 2); window.scale.y = 1.25; stool.add(window);
+    }
+    cylinder(stool, .3, .3, .035, [0, .368, 0], '#b98a6a', 'cloth');
+    const embroidery = canvasPlane(stool, .5, .5, (ctx, c) => {
+      ctx.strokeStyle = '#efe2c8'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(c.width / 2, c.height / 2, c.width * .38, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#efe2c8'; ctx.font = `${c.width * .4}px "Noto Serif SC", serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('福', c.width / 2, c.height * .53);
+    });
+    embroidery.rotation.x = -Math.PI / 2; embroidery.position.y = .387; embroidery.userData.ignoreRaycast = true;
+    // A low footstool (脚踏) with a folded fan replaces the slippers.
+    const footstool = group(this.root, [-1.3, .2, 2.36], .6);
+    box(footstool, [.72, .05, .36], [0, .17, 0], p.wood, .01, 'wood');
+    for (const x of [-.3, .3]) for (const z of [-.13, .13]) box(footstool, [.045, .15, .045], [x, .075, z], p.darkWood, .006, 'wood');
+    for (const z of [-.16, .16]) box(footstool, [.62, .05, .02], [0, .125, z], p.darkWood, .006, 'wood');
+    const fan = group(footstool, [.08, .2, 0], .3);
+    box(fan, [.32, .016, .05], [0, 0, 0], '#d9c08f', .004, 'wood');
+    ball(fan, [.016, .016, .016], [-.16, .006, 0], p.terracotta, 'cloth');
+    cylinder(fan, .008, .012, .09, [-.2, -.03, 0], p.terracotta, 'cloth').rotation.z = Math.PI / 2.4;
   }
 
   private paintRug(ctx: CanvasRenderingContext2D, w: number, h: number) {
@@ -324,7 +342,7 @@ export class Room {
     // Auspicious clouds: curled lobes drawn as soft ink-brown outlines with a pale wash.
     const cloud = (cx: number, cy: number, s: number, flip = 1) => {
       ctx.save(); ctx.translate(cx, cy); ctx.scale(s * flip, s);
-      ctx.fillStyle = 'rgba(185,138,106,.28)'; ctx.strokeStyle = '#a2765d'; ctx.lineWidth = 3 / s;
+      ctx.fillStyle = 'rgba(178,124,92,.5)'; ctx.strokeStyle = '#86593f'; ctx.lineWidth = 4.5 / s;
       ctx.beginPath();
       ctx.arc(-34, 0, 22, Math.PI * .5, Math.PI * 1.6); ctx.arc(0, -14, 26, Math.PI * 1.1, Math.PI * 1.95);
       ctx.arc(34, 0, 22, Math.PI * 1.4, Math.PI * .5); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -396,7 +414,7 @@ export class Room {
     cylinder(bowl, .21, .17, .13, [0, .08, 0], p.cream, 'ceramic');
     cylinder(bowl, .17, .17, .02, [0, .15, 0], '#bba57c');
     for (let i = 0; i < 4; i++) box(bowl, [.09, .07, .08], [Math.sin(i * 2) * .09, .18, Math.cos(i * 2) * .08], i % 2 ? '#d3ad73' : p.terracotta, .02);
-    this.bonsai(this.root, [3.16, .2, 2.21]);
+    this.bamboo(this.root, [3.16, .2, 2.21]);
     this.plant(this.root, [2.53, .2, 2.58], .5, p.ink, false);
   }
 
@@ -476,21 +494,32 @@ export class Room {
     }
   }
 
-  private bonsai(parent: THREE.Object3D, position: number[]) {
-    const tree = group(parent, position);
-    box(tree, [.85, .09, .7], [0, .07, 0], p.darkWood, .012, 'wood');
-    box(tree, [.69, .27, .53], [0, .235, 0], '#b9b2a2', .035, 'ceramic');
-    box(tree, [.59, .02, .43], [0, .377, 0], '#514c40', .02);
-    tube(tree, [[0, .38, 0], [-.1, .69, 0], [.12, 1.08, -.05], [.06, 1.6, 0]], .06, p.darkWood, 'wood');
-    for (const [x, y, z] of [[-.34, .98, .05], [.36, 1.26, -.04], [.04, 1.6, 0]]) {
-      tube(tree, [[.05, .75, 0], [x * .55, y - .18, z], [x, y, z]], .025, p.darkWood, 'wood');
-      const canopy = group(tree, [x, y, z]);
-      for (let i = 0; i < 7; i++) {
-        const a = i * 2.4;
-        ball(canopy, [.19, .085, .16], [Math.sin(a) * .18, i % 2 * .05, Math.cos(a) * .13], i % 2 ? p.moss : p.sage, 'leaf');
+  /** A clump of bamboo in a blue-and-white planter, like the bamboo beside the entrance doors. */
+  private bamboo(parent: THREE.Object3D, position: number[]) {
+    const clump = group(parent, position);
+    const profile = [[0, 0], [.24, 0], [.3, .08], [.34, .28], [.33, .4], [.36, .43], [.3, .43]].map(([r, y]) => new THREE.Vector2(r, y));
+    const pot = new THREE.Mesh(new THREE.LatheGeometry(profile, 40), mat('#eef0ec', 'ceramic')); pot.castShadow = pot.receiveShadow = true; clump.add(pot);
+    for (const [y, r, h] of [[.36, .345, .035], [.12, .315, .025], [.24, .34, .07]]) cylinder(clump, r, r, h, [0, y, 0], '#4f6a8f', 'ceramic');
+    cylinder(clump, .3, .3, .02, [0, .42, 0], '#5e5243');
+    const culms = [[-.1, -.06, 2.1, .06], [.08, -.1, 2.35, -.04], [.12, .08, 1.75, -.09], [-.06, .11, 1.55, .1], [.02, 0, 1.95, .02]];
+    culms.forEach(([x, z, height, lean], index) => {
+      const culm = group(clump, [x, .42, z]); culm.rotation.z = lean; culm.rotation.x = lean * .6;
+      for (let y = 0; y < height; y += .28) {
+        cylinder(culm, .021, .023, .27, [0, y + .135, 0], index % 2 ? '#a3b07c' : '#93a46e', 'wood');
+        cylinder(culm, .027, .027, .022, [0, y + .272, 0], '#7c8c5c', 'wood');
       }
-      this.ambient.push({ object: canopy, phase: y, amount: .015, axis: 'z', base: 0 });
-    }
+      const crown = group(culm, [0, height * .62, 0]);
+      for (let twig = 0; twig < 4; twig++) {
+        const a = twig * 1.7 + index, y = twig * height * .11;
+        const spray = group(crown, [0, y, 0], a);
+        tube(spray, [[0, 0, 0], [.12, .07, 0], [.24, .1, 0]], .006, '#8b9b66', 'wood');
+        for (let i = 0; i < 5; i++) {
+          const foliage = leaf(spray, [.032, 1, .15], [.12 + i * .03, .07 + (i % 2) * .03, (i - 2) * .025], [p.sage, p.moss, '#9fb38a'][i % 3]);
+          foliage.rotation.set(.3 + (i - 2) * .22, Math.PI / 2 + (i - 2) * .35, -.5 - i * .08);
+        }
+      }
+      this.ambient.push({ object: crown, phase: index * 1.3, amount: .025, axis: 'z', base: 0 });
+    });
   }
 
   private plant(parent: THREE.Object3D, pos: number[], scale: number, color: string, trailing: boolean) {

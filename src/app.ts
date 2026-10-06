@@ -6,7 +6,8 @@ import { CameraRig } from './systems/Camera';
 import { TimeOfDay, initialTimeMode, type TimeMode } from './systems/TimeOfDay';
 import { InteractableRegistry, type InteractableDefinition } from './systems/Interactable';
 import { quotes } from './data/quotes';
-import { UI, icons } from './ui/UI';
+import { UI } from './ui/UI';
+import { discoverySeals } from './ui/copy';
 import { applyTheme } from './ui/theme';
 import { Weather } from './systems/Weather';
 import { RoomAudio } from './systems/Audio';
@@ -56,7 +57,7 @@ try { store = localStorage; } catch { /* Browsers may disable device storage. Ke
 let journal: Journal | undefined;
 const discovery = new Discovery(store, (count, definition) => {
   ui.setDiscoveries(count, discoveries.length);
-  if (definition) ui.toast(definition.label);
+  if (definition) ui.toast(definition.label, discoverySeals[definition.id]);
   journal?.refresh();
 });
 const ambience = new Ambience(scene, id => { if (!camera.focused) discovery.record(id); });
@@ -83,10 +84,16 @@ let turning: { entry: InteractableDefinition; progress: number } | undefined;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.resize(innerWidth, innerHeight); painter.setSize(innerWidth, innerHeight); }
 window.addEventListener('resize', resize); resize();
+let pageTurn = false;
 function showPage() {
   if (!active?.quoteIds) return;
   const quote = quotes.find(q => q.id === active!.quoteIds![page % active!.quoteIds!.length])!;
-  room.showQuote(active.focus, quote[getLocale()], quote[getLocale() === 'vi' ? 'zh' : 'vi'].replace('\n', ' '), active.kind === 'book', active.object.rotation.y);
+  ui.showPage({
+    eyebrow: t('A LITTLE NOTE FOR YOU'), lines: quote[getLocale()].split('\n'),
+    secondary: quote[getLocale() === 'vi' ? 'zh' : 'vi'].replace('\n', ' '),
+    page: page % active.quoteIds.length + 1, total: active.quoteIds.length,
+  }, pageTurn);
+  pageTurn = false;
   document.querySelector('#world-canvas')!.setAttribute('aria-label', `${t(active.label)}. ${quote[getLocale()].replace('\n', ' ')}`);
 }
 function activate(entry: InteractableDefinition) {
@@ -118,7 +125,7 @@ function leaveFocus() {
   canvas.setAttribute('aria-label', t('可探索的三维小屋')); canvas.focus({ preventScroll: true });
 }
 document.querySelector('#leave-focus')!.addEventListener('click', leaveFocus);
-document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; quoteDelay = .76; turning = { entry: active, progress: 0 }; });
+document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; quoteDelay = .76; pageTurn = true; turning = { entry: active, progress: 0 }; });
 document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); ui.showInstructions(); });
 function changeTime(mode: TimeMode) { time.set(mode); ui.setTime(mode); audio.setTime(mode); }
 // An explicit time choice carries back to the entrance and cinema as the site theme.
@@ -127,11 +134,7 @@ document.querySelectorAll<HTMLButtonElement>('button[data-time]').forEach(b => b
 function onKeyDown(e: KeyboardEvent) { if (e.key === 'Escape') { if (journal?.isOpen) journal.close(); else leaveFocus(); } }
 window.addEventListener('keydown', onKeyDown);
 const soundButton = document.querySelector<HTMLButtonElement>('#sound')!;
-function updateSoundButton() {
-  soundButton.setAttribute('aria-pressed', String(audio.on));
-  soundButton.setAttribute('aria-label', t(audio.on ? '关闭声音' : '打开声音')); soundButton.title = t(audio.on ? '关闭声音' : '打开声音');
-  soundButton.innerHTML = `<i data-lucide="${audio.on ? 'volume-2' : 'volume-x'}"></i>`; icons();
-}
+function updateSoundButton() { ui.setSound(audio.on); }
 soundButton.addEventListener('click', async () => {
   try {
     const enabled = await audio.toggle(); updateSoundButton();
@@ -144,7 +147,7 @@ function changeWeather() {
   ui.toast(raining ? '正在下雨' : '雨停了');
 }
 document.querySelector('#weather')!.addEventListener('click', changeWeather);
-journal = new Journal(discovery, interactions, id => { const entry = interactions.get(id); if (entry) activate(entry); }, () => { audio.music = !audio.music; if (audio.music && !audio.on) ui.toast('轻音乐已准备好，打开右上角声音即可聆听。'); return audio.music; }, () => audio.music,
+journal = new Journal(discovery, interactions, id => { const entry = interactions.get(id); if (entry) activate(entry); }, () => { audio.music = !audio.music; if (audio.music && !audio.on) ui.toast('轻音乐已准备好，打开「音」即可聆听。'); return audio.music; }, () => audio.music,
   { get: () => painter.enabled, toggle: () => { setLook(!painter.enabled, true); return painter.enabled; } });
 
 function refreshLanguage() {
@@ -170,8 +173,7 @@ canvas.addEventListener('pointermove', e => {
   if (down.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) > 5 && e.buttons) { dragging = true; ui.dismissInstructions(); }
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
   const hit = !active && !dragging && !journal?.isOpen ? interactions.hit(ray, scene) : undefined;
-  const tooltip = document.querySelector<HTMLElement>('#tooltip')!; tooltip.hidden = !hit;
-  if (hit) ui.showTooltip(hit.label, e.clientX, e.clientY);
+  if (hit) ringAround(hit); else ui.hideHover();
   canvas.style.cursor = hit ? 'pointer' : dragging ? 'grabbing' : 'grab';
 });
 canvas.addEventListener('pointerup', e => {
@@ -179,11 +181,20 @@ canvas.addEventListener('pointerup', e => {
   if (dragging || active || journal?.isOpen || fingers.size) return;
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
   const hit = interactions.hit(ray, scene); if (hit) activate(hit);
-  (document.querySelector('#tooltip') as HTMLElement).hidden = true;
+  ui.hideHover();
 });
 canvas.addEventListener('wheel', () => ui.dismissInstructions(), { passive: true });
 canvas.addEventListener('pointercancel', e => { fingers.delete(e.pointerId); dragging = true; });
-canvas.addEventListener('pointerleave', () => { (document.querySelector('#tooltip') as HTMLElement).hidden = true; });
+canvas.addEventListener('pointerleave', () => ui.hideHover());
+// The ink ring circles the hovered object's bounds, projected to the screen.
+const ringBox = new THREE.Box3(), ringSphere = new THREE.Sphere(), ringPoint = new THREE.Vector3();
+function ringAround(entry: InteractableDefinition) {
+  ringBox.setFromObject(entry.object).getBoundingSphere(ringSphere);
+  ringPoint.copy(ringSphere.center).project(camera.camera);
+  const view = camera.camera, pixelsPerUnit = innerHeight / ((view.top - view.bottom) / view.zoom);
+  const size = Math.min(Math.max(ringSphere.radius * 2 * pixelsPerUnit * 1.15, 56), 320);
+  ui.showRing(entry.id, entry.label, (ringPoint.x + 1) / 2 * innerWidth, (1 - ringPoint.y) / 2 * innerHeight, size);
+}
 const clock = new THREE.Clock(); let elapsed = 0;
 const visibility = () => { void audio.visibility(document.hidden); clock.getDelta(); };
 document.addEventListener('visibilitychange', visibility);
@@ -205,6 +216,9 @@ renderer.setAnimationLoop(() => {
   painter.render(scene, camera.camera, nightInk);
 });
 ui.ready();
+// First visit: a three-step guide replaces the hint line; afterwards the hint stays as before.
+const guided = (() => { try { return localStorage.getItem('sua-house-guide') === 'done'; } catch { return true; } })();
+if (!guided) setTimeout(() => ui.startGuide(() => { try { localStorage.setItem('sua-house-guide', 'done'); } catch { /* Shows again next visit. */ } canvas.focus({ preventScroll: true }); }), 900);
 const disposeWorldTools = registerWorldTools({
   state: () => ({ time: time.mode, weather: weather.mode, discoveries: discovery.count, objects: interactions.entries.map(i => ({ id: i.id, label: t(i.label), kind: i.kind })), pets: residents.map(p => ({ id: p.definition.id, state: p.state, location: p.current })), reading: active?.id ?? null }),
   configure: (mode, rain) => { if (mode) changeTime(mode); if (rain !== undefined && rain !== (weather.mode === 'rain')) changeWeather(); },
