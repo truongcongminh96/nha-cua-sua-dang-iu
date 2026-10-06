@@ -15,5 +15,5 @@ if (page === 'home') {
     document.querySelector('#app')!.replaceChildren(message);
   });
 } else {
-  import('./ui/Entrance').then(({ showEntrance }) => showEntrance(document.querySelector('#app')!, page === 'cinema'));
+  import('./ui/Entrance').then(({ showEntrance }) => showEntrance(document.querySelector('#app')!));
 }

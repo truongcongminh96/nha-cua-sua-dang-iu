@@ -1,50 +1,58 @@
-import { createIcons, ArrowUpRight, ArrowLeft } from 'lucide';
+import { createIcons, ArrowUpRight, Moon, Sun } from 'lucide';
 import { getLocale, onLocaleChange, setLocale, t } from '../data/i18n';
 import { localize } from './localize';
 import './entrance.css';
 
-/** Three.js only loads after choosing the house. */
-export function showEntrance(container: HTMLElement, cinema = false) {
+/** Keep the illustrated threshold light: Three.js only loads after entering the house. */
+export function showEntrance(container: HTMLElement) {
+  const artwork = document.documentElement.dataset.theme === 'dark'
+    ? '/images/entrance-doors-night.jpg' : '/images/entrance-doors.jpg';
   container.innerHTML = `<main class="entrance">
     <header class="entrance-header">
-      <a class="entrance-name" href="?page=choose"><span class="entrance-seal" aria-hidden="true">家</span><span>Sữa Bea</span></a>
+      <a class="entrance-name" href="?page=choose"><span>Sữa Bea</span><span class="entrance-seal" aria-hidden="true">家</span></a>
       <nav class="entrance-languages" aria-label="中文 / Tiếng Việt">
-        <button data-locale="zh">中文</button><span aria-hidden="true">/</span><button data-locale="vi">Tiếng Việt</button>
+        <button data-locale="vi" lang="vi" aria-label="Tiếng Việt">VI</button><span aria-hidden="true">/</span><button data-locale="zh" lang="zh-CN" aria-label="中文">中文</button>
+        <span class="entrance-control-rule" aria-hidden="true"></span>
         <button class="entrance-theme" data-live-copy aria-label="Đổi giao diện sáng / tối"></button>
       </nav>
     </header>
     <section class="entrance-content" aria-labelledby="entrance-title">
-      <div class="entrance-watermark" aria-hidden="true">${cinema ? '影' : '家'}</div>
       <div class="entrance-hero">
-        <p class="entrance-eyebrow">Sữa Bea · <span>来待一会儿吧。</span></p>
-        <h1 id="entrance-title">${cinema ? '小影院还在布置中。' : '今天想去哪里？'}</h1>
-        <p class="entrance-intro">${cinema ? '电影还没开场。先来小屋坐一会儿吧。' : '看一场电影，或回小屋歇一歇。'}</p>
-        <a class="entrance-home-link" href="?page=home"><span>进屋坐坐</span><span class="entrance-arrow"><i data-lucide="arrow-up-right"></i></span></a>
+        <h1 id="entrance-title">今天想去哪里？</h1>
+        <p class="entrance-intro">一场电影，或一隅宁静？</p>
       </div>
-      ${cinema ? `<a class="entrance-back" href="?page=choose"><i data-lucide="arrow-left"></i><span>重新选一个地方</span></a>` : `
-      <div class="destination-index"><span aria-hidden="true">目錄</span><span>01 — 02</span></div>
-      <div class="destination-cards">
-        <a class="destination-card" href="?page=cinema">
-          <span class="destination-number" aria-hidden="true">一</span>
-          <div class="destination-copy"><h2>一起看电影</h2><p>留一点时间，给银幕里的故事。</p></div>
-          <span class="destination-note">两个人的私人影院</span><i class="destination-arrow" data-lucide="arrow-up-right"></i>
+      <div class="destination-doors">
+        <a class="destination-door destination-door--cinema" href="?page=cinema" aria-labelledby="cinema-title" aria-describedby="cinema-description">
+          <span class="destination-art" aria-hidden="true"><img data-door-art src="${artwork}" width="1586" height="992" alt="" fetchpriority="high" draggable="false" /></span>
+          <div class="destination-copy">
+            <h2 id="cinema-title"><span>一起看电影</span><span class="destination-arrow"><i data-lucide="arrow-up-right"></i></span></h2>
+            <p id="cinema-description">Sữa & Xiiu 的放映室</p>
+          </div>
         </a>
-        <a class="destination-card" href="?page=home">
-          <span class="destination-number" aria-hidden="true">二</span>
-          <div class="destination-copy"><h2>进屋坐坐</h2><p>翻翻书，听听雨，陪 Mochi 待一会儿。</p></div>
-          <span class="destination-note">小屋的灯已经亮了</span><i class="destination-arrow" data-lucide="arrow-up-right"></i>
+        <a class="destination-door destination-door--home" href="?page=home" aria-labelledby="home-title" aria-describedby="home-description">
+          <span class="destination-art" aria-hidden="true"><img data-door-art src="${artwork}" width="1586" height="992" alt="" fetchpriority="high" draggable="false" /></span>
+          <div class="destination-copy">
+            <h2 id="home-title"><span>进屋坐坐</span><span class="destination-arrow"><i data-lucide="arrow-up-right"></i></span></h2>
+            <p id="home-description">读书、听雨、坐一会儿</p>
+          </div>
         </a>
-      </div>`}
+      </div>
     </section>
-    <footer class="entrance-footer"><p>不用赶时间。</p><span>Sữa Bea</span></footer>
+    <footer class="entrance-footer"><span class="entrance-footer-rule" aria-hidden="true"></span><p>两个小地方，一段属于我们的时光。</p><span class="entrance-seal" aria-hidden="true">家</span><span class="entrance-footer-rule" aria-hidden="true"></span></footer>
   </main>`;
-  createIcons({ icons: { ArrowUpRight, ArrowLeft }, attrs: { 'stroke-width': 1.5, 'aria-hidden': 'true' } });
   const themeButton = container.querySelector<HTMLButtonElement>('.entrance-theme')!;
   const updateTheme = () => {
     const dark = document.documentElement.dataset.theme === 'dark';
-    themeButton.textContent = dark ? '月' : '日';
+    container.querySelectorAll<HTMLImageElement>('[data-door-art]').forEach(image => {
+      const source = dark ? '/images/entrance-doors-night.jpg' : '/images/entrance-doors.jpg';
+      if (image.getAttribute('src') !== source) image.src = source;
+    });
+    themeButton.innerHTML = `<i data-lucide="${dark ? 'sun' : 'moon'}"></i>`;
+    createIcons({ icons: { ArrowUpRight, Moon, Sun }, attrs: { 'stroke-width': 1.5, 'aria-hidden': 'true' } });
     themeButton.setAttribute('aria-pressed', String(dark));
-    themeButton.setAttribute('aria-label', getLocale() === 'vi' ? 'Giao diện tối' : '深色模式');
+    themeButton.setAttribute('aria-label', getLocale() === 'vi'
+      ? (dark ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối')
+      : (dark ? '切换浅色模式' : '切换深色模式'));
   };
   themeButton.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -62,7 +70,7 @@ export function showEntrance(container: HTMLElement, cinema = false) {
   const refresh = () => {
     localize(container);
     document.documentElement.lang = getLocale() === 'vi' ? 'vi' : 'zh-CN';
-    document.title = cinema ? `${t('一起看电影')} · Sữa Bea` : `${t('今天想去哪里？')} · Sữa Bea`;
+    document.title = `${t('今天想去哪里？')} · Sữa Bea`;
     container.querySelectorAll<HTMLButtonElement>('[data-locale]').forEach(button => {
       button.setAttribute('aria-pressed', String(button.dataset.locale === getLocale()));
     });

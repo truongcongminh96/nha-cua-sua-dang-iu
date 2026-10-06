@@ -1,5 +1,9 @@
 export type Locale = 'zh' | 'vi';
 export const vietnamese: Record<string, string> = {
+  '一场电影，或一隅宁静？': 'Một bộ phim, hay một góc bình yên?',
+  'Sữa & Xiiu 的放映室': 'Phòng chiếu của Sữa & Xiiu',
+  '读书、听雨、坐一会儿': 'Đọc sách, nghe mưa, ngồi chơi',
+  '两个小地方，一段属于我们的时光。': 'Hai nơi nhỏ. Một khoảng thời gian cho nhau.',
   '今天想去哪里？': 'Hôm nay mình đi đâu?', '来待一会儿吧。': 'Ghé chơi một chút nhé.',
   '看一场电影，或回小屋歇一歇。': 'Đi xem phim, hay vô nhà ngồi chơi?',
   '一起看电影': 'Đi xem phim', '进屋坐坐': 'Vô nhà',
