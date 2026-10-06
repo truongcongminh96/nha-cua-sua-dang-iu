@@ -52,3 +52,7 @@ Create limits are per identity per hour; join limits are per identity per minute
 Playback and reactions are cooperative ephemeral events between the two admitted members. The frontend chooses one host tab as the playback authority; client broadcast payloads are not cryptographically attributed to individual members. This MVP does not promise protection from a malicious already-admitted participant spoofing playback/presence. Do not treat these payloads as database authorization or implement security-sensitive host-only operations from them.
 
 There is no automatic host transfer, member eviction, or room expiry. Temporary disconnection preserves membership. Losing anonymous browser storage loses the identity; a full room does not automatically free a seat for a new identity. Room cleanup and identity recovery require a later product decision or administrative action.
+
+## Mã phòng chung
+
+Mã 6 chữ số không được lưu trong repo. Migration tạo một digest ngẫu nhiên, nên sau khi cài mới chưa có mã nào dùng được. Đặt hoặc đổi mã bằng [snippets/rotate-cinema-pin.sql](snippets/rotate-cinema-pin.sql) (thay `000000` trước khi chạy, không commit bản đã điền). Để chạy `pnpm test:cinema:shared`, thêm `CINEMA_PIN=<mã>` vào `.env.local`.
