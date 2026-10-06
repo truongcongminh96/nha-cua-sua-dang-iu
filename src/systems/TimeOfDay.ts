@@ -39,7 +39,8 @@ export class TimeOfDay {
     this.sunlight.position.x += Math.sin(elapsed * .018) * .0004;
     this.bounce.intensity = THREE.MathUtils.lerp(this.bounce.intensity, this.mode === 'night' ? .16 : .5, blend);
     for (const material of this.room.windows) { material.color.lerp(this.color.set(preset.sky), blend); material.emissive.copy(material.color); }
-    for (const material of this.room.bulbs) material.emissiveIntensity = THREE.MathUtils.lerp(material.emissiveIntensity, preset.bulb + (rain ? .3 : 0), blend);
-    for (const light of this.room.lamps) light.intensity = THREE.MathUtils.lerp(light.intensity, (preset.lamp + (rain ? .8 : 0)) * (1 + Math.sin(elapsed * 1.3) * .015), blend);
+    // Lanterns switched off by hand stay dark in every time of day.
+    this.room.bulbs.forEach((material, i) => { material.emissiveIntensity = THREE.MathUtils.lerp(material.emissiveIntensity, (this.room.lampOn[i] ?? true) ? preset.bulb + (rain ? .3 : 0) : 0, blend); });
+    this.room.lamps.forEach((light, i) => { light.intensity = THREE.MathUtils.lerp(light.intensity, (this.room.lampOn[i] ?? true) ? (preset.lamp + (rain ? .8 : 0)) * (1 + Math.sin(elapsed * 1.3) * .015) : 0, blend); });
   }
 }

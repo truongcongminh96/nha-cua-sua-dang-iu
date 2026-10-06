@@ -78,3 +78,27 @@ Kiểm chứng (06/10/2026): build, lint, test 26/26. Số mesh trước khi g�
   - Hoa văn mây trên thảm đậm hơn.
 - **Mobile:** camera màn hình dọc phóng gần hơn (`5.3 / aspect`). Trạng thái Mochi nằm dưới header.
 - **Kiểm chứng (06/10/2026):** build, lint, test 26/26, số mesh sau khi gộp là 204. Chromium 1440px: hướng dẫn, rê chuột, sổ, đọc và lật trang. 390px: thanh dấu triện, đọc, không tràn ngang. Không có lỗi trên trang.
+
+## Căn nhà: tương tác (giai đoạn 4)
+
+Đồ vật tương tác kiểu mới (`kind: 'action'`) phản hồi ngay tại chỗ, không chuyển sang chế độ đọc. Tất cả đều có trong danh sách đồ vật ở bảng 序, nên dùng được bằng bàn phím.
+
+- **Viết chữ (墨):** bấm bộ giấy và nghiên trên thư án để mở khung viết.
+  - Giấy có ô chữ mễ (米字格). Viết chậm thì nét đậm, viết nhanh thì nét mảnh; nếu dùng bút cảm ứng thì theo lực nhấn. Cuối mỗi nét có đầu nhọn.
+  - "Treo lên tường" thay chữ 慢 trên tranh cuộn bằng chữ vừa viết. Chữ được lưu ở `sua-house-calligraphy` (ảnh PNG, khoảng 90KB), nên tải lại trang vẫn còn. Nút "Trả lại chữ 慢" để trở về chữ cũ ([`src/ui/Calligraphy.ts`](../src/ui/Calligraphy.ts)).
+- **Pha trà (茶):** ấm nghiêng về phía chén, có dòng nước, nước dâng trong chén, kèm tiếng nước. Hơi nước bốc lên khoảng 14 giây và Mochi lại gần.
+- **Mochi (果, tim):**
+  - Bấm Mochi: bé thức dậy hoặc vươn vai, có tim đỏ bay lên.
+  - Bấm đĩa trái cây: Mochi đi tới ăn.
+- **Đèn lồng:** bấm để bật hoặc tắt từng chiếc (đèn lồng đứng, đèn lồng nhỏ trên bàn, đèn lồng treo). Đèn tắt bằng tay sẽ tắt ở mọi thời điểm trong ngày. Đèn lồng treo đung đưa khi chạm.
+- **Cành mai:** có 14 vị trí hoa. Lần đầu nở 3 bông, mỗi ngày ghé thêm một bông (lưu ở `sua-house-visits`, tối đa 60 ngày). Bấm vào cành để xem đã nở bao nhiêu bông.
+- **Sổ dấu:** thêm 3 con dấu 茶, 墨, 果; tổng cộng 15 khoảnh khắc.
+- **Hiệu ứng hạt** (hơi nước, tim) nằm trong [`src/world/Rituals.ts`](../src/world/Rituals.ts) và chậm lại khi bật giảm chuyển động.
+- **Gộp mesh:** đèn lồng, bộ viết và đĩa trái cây được gộp bên trong từng nhóm và vẫn bấm được. Sau khi gộp còn 291 mesh trong fixture test; trong trình duyệt còn ít hơn vì các đồ vật đó được gộp thêm.
+- **Chưa làm:** bảng lời nhắn cho nhau (cần bảng dữ liệu Supabase và phân quyền riêng).
+- **Kiểm chứng (06/10/2026):** build, lint, test 26/26. Chromium 1440px:
+  - pha trà, chụp lúc đang rót và lúc có hơi nước;
+  - viết chữ, treo lên, tải lại trang vẫn còn;
+  - cành mai, đĩa trái cây, tắt đèn lồng lúc đêm, vuốt ve Mochi, sổ 15 dấu.
+
+  Không có lỗi trên trang.

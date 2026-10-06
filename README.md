@@ -26,11 +26,12 @@ pnpm test      # Kiểm tra nội dung, điều hướng, hành vi, lưu trữ v
 - Nút **中文 / Tiếng Việt** đổi ngôn ngữ ngay cả khi đang đọc sách, giữ nguyên góc nhìn và trạng thái thế giới. Lựa chọn được lưu trên máy. Giao diện, bìa sách, lời nhắn, ghi chú, nhật ký và trạng thái Mochi có cả hai bản; trang sách hiển thị ngôn ngữ còn lại dưới lời nhắn chính.
 - Kéo để xoay, cuộn để thu phóng; trên điện thoại dùng một ngón để xoay, hai ngón để thu phóng.
 - Nhấn một trong năm cuốn sách để mở sách và đọc chữ ngay trên trang giấy 3D. Nhấn “再读一页” để lật trang; Esc hoặc “回到小屋” để trở về góc nhìn trước.
+- Viết một chữ Hán trên thư án rồi treo lên tranh cuộn; pha một ấm trà; bật/tắt từng đèn lồng; cho Mochi ăn trái cây hoặc vuốt ve bé. Cành mai nở thêm một bông mỗi ngày bạn ghé.
 - Bưu thiếp, giấy ghi chú, hộp nhạc và máy ảnh chứa những lời nhắn nhỏ. Các vật thể cũng có nút truy cập bằng bàn phím trong phần giới thiệu căn nhà.
 - Chọn ban ngày, hoàng hôn hoặc ban đêm ở góc phải trên. Thời điểm ban đầu lấy theo giờ địa phương; ánh sáng chuyển dần.
 - Bật mưa ở góc phải dưới. Âm thanh mặc định tắt. Khi bật sẽ có tiếng gió, chim ở xa, mưa, lật trang và bước chân nhỏ. Nhấn hộp nhạc để nghe giai điệu. Nhạc nền được bật riêng trong phần giới thiệu.
 - Mochi tự ngủ, thức dậy, vươn vai, đi, leo, đánh hơi, ăn trái cây, chải lông, nhảy và lượn. Sóc bay hoạt động về đêm nên ban ngày thường thích ngủ hơn.
-- Mười hai khoảnh khắc được lưu trong `localStorage` theo ngày địa phương. Không có điểm số hoặc nhiệm vụ. Khi bộ nhớ bị chặn, căn nhà vẫn hoạt động và giữ phát hiện trong phiên hiện tại.
+- Mười lăm khoảnh khắc được lưu trong `localStorage` theo ngày địa phương. Không có điểm số hoặc nhiệm vụ. Khi bộ nhớ bị chặn, căn nhà vẫn hoạt động và giữ phát hiện trong phiên hiện tại.
 - Đêm quang đôi khi có sao băng. Khi chuyển sang tab khác, thế giới và âm thanh tạm dừng. Chuyển động môi trường tôn trọng cài đặt giảm chuyển động của hệ thống.
 
 ## Cấu trúc

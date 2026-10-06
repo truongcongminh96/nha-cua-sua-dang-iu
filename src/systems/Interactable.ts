@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 export interface InteractableDefinition {
   id: string; label: string; object: THREE.Object3D; focus: THREE.Vector3;
-  kind: 'book' | 'memory' | 'pet'; quoteIds?: string[]; open?: (value: number) => void;
+  kind: 'book' | 'memory' | 'pet' | 'action'; quoteIds?: string[]; open?: (value: number) => void;
   turn?: (value: number) => void;
+  /** Actions run in place (pour tea, toggle a lantern) instead of opening a reading view. */
+  act?: () => void;
 }
 export class InteractableRegistry {
   readonly entries: InteractableDefinition[] = [];

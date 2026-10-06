@@ -20,6 +20,9 @@ import { Journal } from './ui/Journal';
 import { batchStaticMeshes } from './world/optimize';
 import { registerWorldTools } from './systems/WorldTools';
 import { LanternHalos, PainterlyRenderer, WindowLight } from './world/Painterly';
+import { Puffs, recordVisit } from './world/Rituals';
+import { Calligraphy } from './ui/Calligraphy';
+import { localDate } from './systems/Discovery';
 
 const ui = new UI(document.querySelector('#app')!);
 const canvas = document.querySelector<HTMLCanvasElement>('#world-canvas')!;
@@ -60,6 +63,15 @@ const discovery = new Discovery(store, (count, definition) => {
   if (definition) ui.toast(definition.label, discoverySeals[definition.id]);
   journal?.refresh();
 });
+const puffs = new Puffs(); scene.add(puffs.group);
+// The plum branch keeps one blossom for every day the house was visited on this device.
+room.setBlossoms(recordVisit(store, localDate()));
+let customScroll = false;
+void Calligraphy.load().then(image => { if (image) { room.setScrollArtwork(image); customScroll = true; } });
+const calligraphy = new Calligraphy(ui.root, written => {
+  const copy = document.createElement('canvas'); copy.width = written.width; copy.height = written.height; copy.getContext('2d')!.drawImage(written, 0, 0);
+  room.setScrollArtwork(copy); customScroll = true; ui.toast('字挂上墙了。'); discovery.record('brush-writing'); audio.page();
+}, () => { room.setScrollArtwork(null); customScroll = false; ui.toast('换回「慢」字了。'); }, () => customScroll, () => canvas.focus({ preventScroll: true }));
 const ambience = new Ambience(scene, id => { if (!camera.focused) discovery.record(id); });
 const navigation = new Navigation(affordances, navigationLinks);
 const residents = pets.map(definition => {
@@ -75,6 +87,11 @@ const residents = pets.map(definition => {
 });
 for (const part of room.ambient) batchStaticMeshes(part.object, []);
 batchStaticMeshes(room.root, [room.quoteGroup, ...room.ambient.map(a => a.object), ...interactions.entries.map(i => i.object)]);
+// Static action objects (lanterns, the writing set, the fruit bowl) batch inside their own group; batches keep the interaction id.
+for (const entry of interactions.entries.filter(e => e.id.startsWith('lantern-') || e.id === 'brush-writing' || e.id === 'mochi-treat')) {
+  batchStaticMeshes(entry.object, []);
+  entry.object.traverse(child => { child.userData.interactionId = entry.id; });
+}
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.ShadowMaterial({ color: '#5e6450', opacity: .14 }));
 ground.rotation.x = -Math.PI / 2; ground.position.y = -.36; ground.receiveShadow = true; ground.userData.ignoreRaycast = true; scene.add(ground);
 let active: InteractableDefinition | undefined, page = 0, openAmount = 0;
@@ -96,10 +113,35 @@ function showPage() {
   pageTurn = false;
   document.querySelector('#world-canvas')!.setAttribute('aria-label', `${t(active.label)}. ${quote[getLocale()].replace('\n', ' ')}`);
 }
+/** Actions happen in place: the room answers without leaving the overview. */
+function perform(entry: InteractableDefinition) {
+  if (entry.id === 'brush-writing') { calligraphy.open(); return; }
+  if (entry.id === 'tea-ritual') {
+    if (room.pouring) return;
+    room.pourTea(); audio.pour(); setTimeout(() => puffs.emit('steam', room.teaCup, 14), 1400);
+    residents.forEach(pet => pet.interestedIn(room.teaCup.toArray()));
+    ui.toast('茶香慢慢散开了。'); discovery.record('tea-ritual'); return;
+  }
+  if (entry.id === 'mochi-treat') {
+    residents.forEach(pet => pet.interestedIn(entry.focus.toArray()));
+    ui.toast('Mochi 闻到水果的香味了。'); discovery.record('mochi-treat'); return;
+  }
+  if (entry.id === 'plum-branch') {
+    const count = room.blossomCount;
+    ui.toast(getLocale() === 'vi' ? `Cành mai đã nở ${count} bông. Mỗi ngày bạn ghé, mai nở thêm một bông.` : `梅枝开了 ${count} 朵。你每来一天，就多开一朵。`); return;
+  }
+  if (entry.id.startsWith('lantern-')) {
+    entry.act?.(); audio.click();
+    ui.toast(room.lampOn[Number(entry.id.slice(8))] ? '灯亮了。' : '灯熄了。'); return;
+  }
+  entry.act?.();
+}
 function activate(entry: InteractableDefinition) {
   ui.dismissInstructions();
+  if (entry.kind === 'action') { perform(entry); return; }
   if (entry.kind === 'pet') {
     const pet = residents.find(pet => pet.definition.id === entry.id)!;
+    pet.pat(); puffs.burst('heart', pet.model.root.position.clone().add(new THREE.Vector3(0, .32, 0)), 4); audio.cloth();
     ui.toast(`${pet.definition.name} ${t(stateLabels[pet.state])}. ${t('陪它一会儿吧。')}`);
     pet.interestedIn(pet.model.root.position.toArray()); return;
   }
@@ -155,7 +197,7 @@ function refreshLanguage() {
   const raining = weather.mode === 'rain';
   ui.setWeather(raining);
   ui.setPetState(residents[0].state);
-  room.refreshLanguage(); journal?.refresh();
+  room.refreshLanguage(); journal?.refresh(); calligraphy.refreshLanguage();
   if (active) { ui.focus(active.label, (active.quoteIds?.length ?? 0) > 1); if (quoteDelay <= 0) showPage(); }
   else canvas.setAttribute('aria-label', t('可探索的三维小屋'));
 }
@@ -172,13 +214,13 @@ canvas.addEventListener('pointerdown', e => { fingers.add(e.pointerId); down.set
 canvas.addEventListener('pointermove', e => {
   if (down.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) > 5 && e.buttons) { dragging = true; ui.dismissInstructions(); }
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
-  const hit = !active && !dragging && !journal?.isOpen ? interactions.hit(ray, scene) : undefined;
+  const hit = !active && !dragging && !journal?.isOpen && !calligraphy.isOpen ? interactions.hit(ray, scene) : undefined;
   if (hit) ringAround(hit); else ui.hideHover();
   canvas.style.cursor = hit ? 'pointer' : dragging ? 'grabbing' : 'grab';
 });
 canvas.addEventListener('pointerup', e => {
   fingers.delete(e.pointerId);
-  if (dragging || active || journal?.isOpen || fingers.size) return;
+  if (dragging || active || journal?.isOpen || calligraphy.isOpen || fingers.size) return;
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
   const hit = interactions.hit(ray, scene); if (hit) activate(hit);
   ui.hideHover();
@@ -202,7 +244,7 @@ renderer.setAnimationLoop(() => {
   if (document.hidden) return;
   const dt = Math.min(clock.getDelta(), .05); elapsed += dt;
   camera.update(dt); time.update(dt, elapsed, weather.mode === 'rain'); room.update(elapsed, reducedMotion);
-  weather.update(dt, reducedMotion); ambience.update(dt, elapsed, time.mode, weather.mode === 'rain', reducedMotion); audio.update(dt, elapsed);
+  weather.update(dt, reducedMotion); puffs.update(dt, reducedMotion); ambience.update(dt, elapsed, time.mode, weather.mode === 'rain', reducedMotion); audio.update(dt, elapsed);
   residents.forEach(pet => pet.update(dt, elapsed, { time: time.mode, rain: weather.mode === 'rain' }));
   if (active) { openAmount = THREE.MathUtils.damp(openAmount, 1, 3, dt); active.open?.(openAmount); }
   readingLight.intensity = THREE.MathUtils.damp(readingLight.intensity, active ? 1.4 : 0, 2, dt);

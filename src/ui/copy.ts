@@ -9,6 +9,7 @@ export const roomStatuses: Record<TimeMode, string> = {
 export const discoverySeals: Record<string, string> = {
   'slow-days': '慢', 'little-light': '光', 'dear-you': '信', 'soft-place': '安', 'small-bravery': '勇', 'hidden-note': '笺',
   'hidden-postcard': '远', 'hidden-music': '曲', 'camera-memory': '忆', 'pet-window': '窗', 'pet-glide': '翔', 'shooting-star': '星',
+  'tea-ritual': '茶', 'brush-writing': '墨', 'mochi-treat': '果',
 };
 export const petStatuses: Record<PetState, string> = {
   sleep: '在睡觉', wake: '刚醒来', stretch: '伸懒腰', walk: '在散步', climb: '在爬架子',

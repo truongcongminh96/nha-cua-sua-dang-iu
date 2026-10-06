@@ -13,6 +13,14 @@ export class Room {
   readonly bulbs: THREE.MeshStandardMaterial[] = [];
   readonly windows: THREE.MeshStandardMaterial[] = [];
   readonly lamps: THREE.PointLight[] = [];
+  /** Per-lantern switch; TimeOfDay multiplies each lamp by it. */
+  readonly lampOn: boolean[] = [];
+  private swings: { object: THREE.Object3D; amount: number }[] = [];
+  private tea?: { pot: THREE.Object3D; stream: THREE.Mesh; liquid: THREE.Mesh; time: number };
+  private blossoms: THREE.Object3D[] = [];
+  private scroll?: { canvas: HTMLCanvasElement; map: THREE.CanvasTexture; image: CanvasImageSource | null };
+  private lastElapsed = 0;
+  readonly teaCup = new THREE.Vector3();
   readonly quoteSurface: THREE.Mesh;
   readonly quoteGroup: THREE.Group;
   private quoteCanvas: HTMLCanvasElement;
@@ -43,6 +51,10 @@ export class Room {
     this.quoteSurface = new THREE.Mesh(new THREE.PlaneGeometry(1.24, .84), new THREE.MeshStandardMaterial({ map: this.quoteTexture, roughness: 1, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }));
     this.quoteSurface.rotation.x = -Math.PI / 2;
     this.quoteGroup.add(this.quoteSurface); this.quoteGroup.visible = false;
+    // Action targets built inside rotated groups get their world-space focus once the scene is assembled.
+    this.root.updateMatrixWorld(true);
+    for (const entry of this.interactions.entries) if (entry.id.startsWith('lantern-')) new THREE.Box3().setFromObject(entry.object).getCenter(entry.focus);
+    this.tea?.liquid.parent?.getWorldPosition(this.teaCup); this.teaCup.y += .1;
   }
 
   private architecture() {
@@ -116,10 +128,19 @@ export class Room {
     vase.position.set(1.99, 1.405, -3.04); vase.castShadow = vase.receiveShadow = true; this.root.add(vase);
     tube(this.root, [[1.99, 1.74, -3.04], [1.94, 1.98, -3.04], [2.06, 2.2, -3.03], [2.2, 2.3, -3.02]], .011, p.darkWood, 'wood');
     tube(this.root, [[1.95, 1.95, -3.04], [1.84, 2.08, -3.03], [1.8, 2.16, -3.02]], .007, p.darkWood, 'wood');
-    for (const [x, y] of [[1.93, 2.0], [2.03, 2.14], [2.1, 2.24], [2.19, 2.29], [1.84, 2.09], [1.8, 2.16], [2.0, 2.08]]) {
-      ball(this.root, [.028, .028, .016], [x, y, -3.01], '#f1cfc8', 'paper');
-      ball(this.root, [.005, .005, .005], [x, y, -2.996], '#c98a3a');
+    // Fourteen blossom slots; one opens for each day the house is visited.
+    const plum = group(this.root, [0, 0, 0]);
+    const slots = [[1.93, 2.0], [2.03, 2.14], [2.1, 2.24], [2.19, 2.29], [1.84, 2.09], [1.8, 2.16], [2.0, 2.08],
+      [1.97, 1.86], [2.07, 2.19], [2.14, 2.27], [1.88, 2.04], [1.95, 1.94], [2.22, 2.31], [1.82, 2.12]];
+    for (const [x, y] of slots) {
+      const blossom = group(plum, [x, y, -3.01]);
+      ball(blossom, [.028, .028, .016], [0, 0, 0], '#f1cfc8', 'paper');
+      ball(blossom, [.005, .005, .005], [0, 0, .014], '#c98a3a');
+      this.blossoms.push(blossom);
     }
+    const plumHit = new THREE.Mesh(new THREE.BoxGeometry(.5, .95, .2), new THREE.MeshBasicMaterial({ visible: false }));
+    plumHit.position.set(2.0, 1.85, -3.0); plum.add(plumHit);
+    this.interactions.register({ id: 'plum-branch', label: '一枝梅', object: plum, focus: new THREE.Vector3(2.0, 1.9, -3.0), kind: 'action' });
   }
 
   private bookshelf() {
@@ -212,17 +233,15 @@ export class Room {
     cylinder(lamp, .25, .27, .06, [0, .03, 0], p.ink, 'metal');
     for (const x of [-.12, .12]) cylinder(lamp, .018, .018, 1.72, [x, .9, 0], p.darkWood, 'wood');
     box(lamp, [.4, .04, .05], [0, 2.3, 0], p.darkWood, .01, 'wood');
-    this.lampShade(lamp, [0, 1.9, 0], .37, .72);
+    this.lampShade(lamp, [0, 1.9, 0], .37, .72, p.cream, true, false, '落地的纸灯笼');
     // A hanging ink scroll replaces the framed botanical print.
     const art = group(this.root, [-3.87, 2.5, .15], Math.PI / 2);
     box(art, [.91, 1.6, .018], [0, 0, 0], '#d3c7b2', .002, 'cloth');
     box(art, [.73, 1.36, .009], [0, 0, .018], p.paper, .002, 'paper');
     for (const y of [-.82, .82]) { const rod = cylinder(art, .025, .025, 1.01, [0, y, 0], p.darkWood, 'wood'); rod.rotation.z = Math.PI / 2; }
-    const drawing = canvasPlane(art, .64, 1.23, (ctx, c) => {
-      ctx.fillStyle = '#1c1a17'; ctx.textAlign = 'center'; ctx.font = '700px "Ma Shan Zheng", "Noto Serif SC", serif'; ctx.fillText('慢', c.width / 2, c.height * .55);
-      ctx.fillStyle = '#b23a2b'; ctx.fillRect(c.width * .7, c.height * .75, 80, 80);
-      ctx.fillStyle = '#f6f2e9'; ctx.font = '60px "Noto Serif SC", serif'; ctx.fillText('家', c.width * .7 + 40, c.height * .75 + 60);
-    }); drawing.position.z = .026;
+    const drawing = canvasPlane(art, .64, 1.23, (ctx, c) => this.paintScroll(ctx, c, null)); drawing.position.z = .026;
+    const scrollMap = (drawing.material as THREE.MeshStandardMaterial).map as THREE.CanvasTexture;
+    this.scroll = { canvas: scrollMap.image as HTMLCanvasElement, map: scrollMap, image: null };
   }
 
   private desk() {
@@ -248,16 +267,32 @@ export class Room {
       cylinder(brush, .008, .008, .34, [0, .1, 0], '#d6bf8c', 'wood');
       ball(brush, [.014, .04, .014], [0, .29, 0], p.ink, 'cloth');
     }
-    box(desk, [.32, .05, .21], [.4, 1.255, .25], '#3e3c39', .02, 'ceramic');
-    box(desk, [.13, .012, .09], [.33, 1.282, .25], '#1f1d1b', .01, 'ceramic');
-    for (const [x, h] of [[-.06, .05], [0, .08], [.06, .05]] as const) ball(desk, [.035, h, .022], [.82 + x, 1.235 + h * .6, .2], '#6d716b', 'ceramic');
+    // The writing set: inkstone, a sheet of xuan paper under two weights, a brush on its mountain rest. Touch it to write.
+    const writing = group(desk, [0, 0, 0]);
+    box(writing, [.32, .05, .21], [.4, 1.255, .25], '#3e3c39', .02, 'ceramic');
+    box(writing, [.13, .012, .09], [.33, 1.282, .25], '#1f1d1b', .01, 'ceramic');
+    const sheet = group(writing, [.98, 1.234, .2], .08);
+    box(sheet, [.44, .004, .32], [0, 0, 0], '#f7f1e3', .001, 'paper');
+    for (const z of [-.13, .13]) box(sheet, [.42, .022, .03], [0, .013, z], '#5b4636', .006, 'wood');
+    const strokes = canvasPlane(sheet, .3, .22, (ctx, c) => {
+      ctx.strokeStyle = 'rgba(28,26,23,.75)'; ctx.lineCap = 'round';
+      for (const [x1, y1, x2, y2, w] of [[.3, .35, .62, .3, 26], [.46, .2, .44, .78, 22], [.3, .55, .2, .72, 18], [.58, .5, .72, .7, 18]]) {
+        ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(c.width * x1, c.height * y1); ctx.lineTo(c.width * x2, c.height * y2); ctx.stroke();
+      }
+    });
+    strokes.rotation.x = -Math.PI / 2; strokes.position.y = .004; strokes.userData.ignoreRaycast = true;
+    for (const [x, h] of [[-.06, .05], [0, .08], [.06, .05]] as const) ball(writing, [.035, h, .022], [.6 + x, 1.235 + h * .6, .02], '#6d716b', 'ceramic');
+    const brush = group(writing, [.6, 1.31, .02], 0); brush.rotation.z = Math.PI / 2;
+    cylinder(brush, .008, .008, .3, [0, 0, 0], '#d6bf8c', 'wood');
+    ball(brush, [.013, .04, .013], [0, .17, 0], p.ink, 'cloth');
+    this.interactions.register({ id: 'brush-writing', label: '写一个字', object: writing, focus: new THREE.Vector3(2.9, 1.5, -2.2), kind: 'action' });
     box(desk, [2.3, .085, .03], [0, 1.05, .5], p.darkWood, .01, 'wood');
     // A small table lantern on a wooden stand instead of a modern desk lamp.
     const lamp = group(desk, [.98, 1.24, -.22]);
     box(lamp, [.3, .04, .3], [0, .02, 0], p.darkWood, .01, 'wood');
     for (const x of [-.12, .12]) cylinder(lamp, .012, .012, .5, [x, .27, 0], p.darkWood, 'wood');
     box(lamp, [.3, .03, .04], [0, .52, 0], p.darkWood, .008, 'wood');
-    this.lampShade(lamp, [0, .3, 0], .16, .3, p.paper, false);
+    this.lampShade(lamp, [0, .3, 0], .16, .3, p.paper, false, false, '书桌上的小灯笼');
     // A Ming official's-hat chair: round legs, S-curved splat and a crest rail with upturned ends.
     const chair = group(this.root, [2.16, .2, -1.2], -.18);
     for (const x of [-.27, .27]) {
@@ -324,6 +359,26 @@ export class Room {
     ball(fan, [.016, .016, .016], [-.16, .006, 0], p.terracotta, 'cloth');
     cylinder(fan, .008, .012, .09, [-.2, -.03, 0], p.terracotta, 'cloth').rotation.z = Math.PI / 2.4;
   }
+
+  /** The hanging scroll shows 慢 by default, or the character written at the desk. */
+  private paintScroll(ctx: CanvasRenderingContext2D, c: HTMLCanvasElement, image: CanvasImageSource | null) {
+    ctx.clearRect(0, 0, c.width, c.height);
+    if (image) ctx.drawImage(image, c.width * .06, c.height * .14, c.width * .88, c.width * .88);
+    else { ctx.fillStyle = '#1c1a17'; ctx.textAlign = 'center'; ctx.font = '700px "Ma Shan Zheng", "Noto Serif SC", serif'; ctx.fillText('慢', c.width / 2, c.height * .55); }
+    ctx.fillStyle = '#b23a2b'; ctx.fillRect(c.width * .7, c.height * .75, 80, 80);
+    ctx.fillStyle = '#f6f2e9'; ctx.textAlign = 'center'; ctx.font = '60px "Noto Serif SC", serif'; ctx.fillText('家', c.width * .7 + 40, c.height * .75 + 60);
+  }
+  setScrollArtwork(image: CanvasImageSource | null) {
+    if (!this.scroll) return;
+    this.scroll.image = image;
+    this.paintScroll(this.scroll.canvas.getContext('2d')!, this.scroll.canvas, image);
+    this.scroll.map.needsUpdate = true;
+  }
+  /** Show one plum blossom per visited day, up to every slot on the branch. */
+  setBlossoms(days: number) { this.blossoms.forEach((blossom, i) => { blossom.visible = i < Math.min(this.blossoms.length, 3 + days); }); }
+  get blossomCount() { return this.blossoms.filter(b => b.visible).length; }
+  pourTea() { if (this.tea && this.tea.time < 0) this.tea.time = 0; }
+  get pouring() { return !!this.tea && this.tea.time >= 0; }
 
   private paintRug(ctx: CanvasRenderingContext2D, w: number, h: number) {
     ctx.fillStyle = '#5f6b78'; ctx.fillRect(0, 0, w, h);
@@ -414,6 +469,7 @@ export class Room {
     cylinder(bowl, .21, .17, .13, [0, .08, 0], p.cream, 'ceramic');
     cylinder(bowl, .17, .17, .02, [0, .15, 0], '#bba57c');
     for (let i = 0; i < 4; i++) box(bowl, [.09, .07, .08], [Math.sin(i * 2) * .09, .18, Math.cos(i * 2) * .08], i % 2 ? '#d3ad73' : p.terracotta, .02);
+    this.interactions.register({ id: 'mochi-treat', label: 'Mochi 的果盘', object: bowl, focus: new THREE.Vector3(2.93, .4, .6), kind: 'action' });
     this.bamboo(this.root, [3.16, .2, 2.21]);
     this.plant(this.root, [2.53, .2, 2.58], .5, p.ink, false);
   }
@@ -424,11 +480,23 @@ export class Room {
     for (const x of [-.52, .52]) box(table, [.065, .6, .67], [x, .3, 0], p.darkWood, .007, 'wood');
     box(table, [1.14, .045, .52], [0, .16, 0], p.wood, .006, 'wood');
     box(table, [.69, .015, .62], [.23, .67, 0], p.paper, .003, 'cloth');
-    ball(table, [.14, .105, .13], [.43, .79, -.18], p.cream, 'ceramic');
-    cylinder(table, .065, .065, .016, [.43, .885, -.18], p.cream, 'ceramic');
-    ball(table, [.022, .022, .022], [.43, .909, -.18], p.ink, 'ceramic');
-    tube(table, [[.52, .78, -.18], [.64, .82, -.18], [.67, .85, -.18]], .033, p.cream, 'ceramic');
-    this.mug(table, [.24, .67, .1], p.cream, 1);
+    // A teapot that pours into a handleless cup: the spout faces the cup, the pot tilts on its own pivot.
+    const teaSet = group(table, [0, 0, 0]);
+    const potBase = group(teaSet, [.43, .69, -.18], -2.16), pot = group(potBase, [0, 0, 0]);
+    ball(pot, [.14, .105, .13], [0, .1, 0], p.cream, 'ceramic');
+    cylinder(pot, .065, .065, .016, [0, .195, 0], p.cream, 'ceramic');
+    ball(pot, [.022, .022, .022], [0, .219, 0], p.ink, 'ceramic');
+    tube(pot, [[.09, .09, 0], [.21, .13, 0], [.24, .16, 0]], .033, p.cream, 'ceramic');
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(.06, .014, 8, 20, Math.PI * 1.3), mat(p.cream, 'ceramic'));
+    handle.position.set(-.14, .11, 0); handle.rotation.z = Math.PI * .35; handle.castShadow = true; pot.add(handle);
+    const cup = group(teaSet, [.24, .67, .1]);
+    cylinder(cup, .09, .09, .01, [0, .005, 0], '#e9dfc9', 'ceramic');
+    cylinder(cup, .062, .044, .075, [0, .048, 0], '#a9b8a2', 'ceramic');
+    const liquid = cylinder(cup, .054, .054, .004, [0, .02, 0], '#b0803e'); liquid.scale.set(.85, 1, .85);
+    const stream = new THREE.Mesh(new THREE.CylinderGeometry(.005, .008, .2, 8), new THREE.MeshStandardMaterial({ color: '#c49352', transparent: true, opacity: 0, roughness: .2 }));
+    stream.position.set(0, .18, 0); stream.userData.ignoreRaycast = true; cup.add(stream);
+    this.tea = { pot, stream, liquid, time: -1 };
+    this.interactions.register({ id: 'tea-ritual', label: '泡一壶茶', object: teaSet, focus: new THREE.Vector3(-.2, .9, -1.1), kind: 'action' });
     box(table, [.48, .055, .34], [-.15, .68, -.1], p.paper, .018, 'paper');
     const camera = group(table, [-.16, .77, -.06], -.3);
     box(camera, [.3, .2, .16], [0, 0, 0], p.ink, .027);
@@ -454,7 +522,7 @@ export class Room {
     tube(basket, [[-.25, .4, 0], [-.3, .63, 0], [0, .73, 0], [.3, .63, 0], [.25, .4, 0]], .026, p.wood, 'wood');
     const pendant = group(this.root, [-1.38, 3.23, -2.86]);
     cylinder(pendant, .009, .009, .43, [0, .34, 0], p.ink, 'metal');
-    this.lampShade(pendant, [0, -.05, 0], .24, .47);
+    this.lampShade(pendant, [0, -.05, 0], .24, .47, p.cream, true, true, '悬着的纸灯笼');
   }
 
   private healingBooks() {
@@ -540,16 +608,18 @@ export class Room {
     return pot;
   }
 
+  /** A handleless teacup on a saucer. */
   private mug(parent: THREE.Object3D, pos: number[], color: string, scale: number) {
-    const mug = group(parent, pos); mug.scale.setScalar(scale);
-    cylinder(mug, .11, .092, .2, [0, .11, 0], color, 'ceramic');
-    cylinder(mug, .09, .09, .007, [0, .213, 0], '#f0e4c9', 'ceramic');
-    cylinder(mug, .079, .079, .008, [0, .217, 0], '#8f6746');
-    const handle = new THREE.Mesh(new THREE.TorusGeometry(.071, .021, 8, 20), mat(color, 'ceramic')); handle.position.set(.115, .12, 0); mug.add(handle);
-    cylinder(mug, .17, .17, .018, [0, .006, 0], '#c4b78c', 'cloth');
+    const cup = group(parent, pos); cup.scale.setScalar(scale);
+    cylinder(cup, .12, .12, .014, [0, .007, 0], '#e9dfc9', 'ceramic');
+    cylinder(cup, .085, .06, .1, [0, .064, 0], color, 'ceramic');
+    cylinder(cup, .074, .074, .006, [0, .1, 0], '#b0803e');
   }
 
-  private lampShade(parent: THREE.Object3D, pos: number[], radius: number, height: number, color = p.cream, tassel = true) {
+  private lampShade(host: THREE.Object3D, pos: number[], radius: number, height: number, color = p.cream, tassel = true, swing = false, label = '一盏纸灯笼') {
+    // Each lantern is one clickable group; a hanging lantern swings from its cord when touched.
+    const parent = group(host, [0, 0, 0]), index = this.lamps.length;
+    this.lampOn.push(true);
     const shadeMaterial = mat(color, 'paper').clone(); shadeMaterial.side = THREE.DoubleSide;
     shadeMaterial.emissive.set('#ffe2b1'); shadeMaterial.emissiveIntensity = .1;
     const points: THREE.Vector2[] = [];
@@ -572,6 +642,10 @@ export class Room {
       cylinder(parent, .016, .03, .17, [pos[0], pos[1] - height / 2 - .16, pos[2]], p.terracotta, 'cloth');
     }
     const light = new THREE.PointLight('#ffd392', 0, 4.5, 1.6); light.position.set(pos[0], pos[1] - height * .48, pos[2]); parent.add(light); this.lamps.push(light);
+    const swinging = { object: parent, amount: 0 }; if (swing) this.swings.push(swinging);
+    this.interactions.register({ id: `lantern-${index}`, label, object: parent, focus: new THREE.Vector3(), kind: 'action', act: () => {
+      this.lampOn[index] = !this.lampOn[index]; swinging.amount = swing ? .12 : 0;
+    } });
   }
 
   private photo(parent: THREE.Object3D, pos: number[], size: number, kind: 'landscape' | 'flower') {
@@ -629,6 +703,21 @@ export class Room {
   }
 
   update(elapsed: number, reducedMotion: boolean) {
+    const dt = Math.min(Math.max(elapsed - this.lastElapsed, 0), .05); this.lastElapsed = elapsed;
+    for (const swing of this.swings) {
+      swing.amount *= Math.exp(-dt * .9);
+      swing.object.rotation.z = reducedMotion ? 0 : Math.sin(elapsed * 3.1) * swing.amount;
+    }
+    if (this.tea && this.tea.time >= 0) {
+      const tea = this.tea, t = tea.time += dt;
+      const lift = THREE.MathUtils.smoothstep(t, 0, .7) * (1 - THREE.MathUtils.smoothstep(t, 2.6, 3.3));
+      tea.pot.position.set(lift * .07, lift * .1, 0); tea.pot.rotation.z = -lift * .62;
+      const pouring = t > .7 && t < 2.6;
+      (tea.stream.material as THREE.MeshStandardMaterial).opacity = THREE.MathUtils.damp((tea.stream.material as THREE.MeshStandardMaterial).opacity, pouring ? .85 : 0, 10, dt);
+      if (t < .1) tea.liquid.position.y = .02;
+      tea.liquid.position.y = THREE.MathUtils.lerp(.02, .072, THREE.MathUtils.smoothstep(t, .8, 2.6));
+      if (t > 3.4) tea.time = -1;
+    }
     for (const part of this.ambient) part.object.rotation[part.axis] = part.base + Math.sin(elapsed * .6 + part.phase) * part.amount * (reducedMotion ? 0 : 1);
   }
 }
