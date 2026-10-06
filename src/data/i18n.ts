@@ -15,7 +15,7 @@ export const vietnamese: Record<string, string> = {
   '电影还没开场。先来小屋坐一会儿吧。': 'Phim chưa chiếu đâu. Bạn có thể ghé nhà ngồi chơi trước nhé.',
   '重新选一个地方': 'Chọn lại chỗ ghé', '不用赶时间。': 'Mình cứ thong thả thôi.',
 
-  '返回首页': 'Về trang chủ', '一间小屋': 'Nhà nhỏ của', 'Sữa Bea 的小屋': 'Nhà nhỏ của Sữa Bea',
+  '返回首页': 'Về trang chủ', '画风 · 水彩': 'Kiểu vẽ · Màu nước', '画风 · 原版': 'Kiểu vẽ · 3D gốc', '一间小屋': 'Nhà nhỏ của', 'Sữa Bea 的小屋': 'Nhà nhỏ của Sữa Bea',
   '阳光照进来了。': 'Nắng đang vào nhà.', '窗外是黄昏。': 'Ngoài cửa sổ là hoàng hôn.', '灯还亮着。': 'Đèn vẫn sáng đây.',
   '手记': 'Nhật ký', '打开小屋手记': 'Mở nhật ký căn nhà', '关闭面板': 'Đóng bảng',
   '今天还没有记录。': 'Hôm nay chưa có ghi chép nào.',

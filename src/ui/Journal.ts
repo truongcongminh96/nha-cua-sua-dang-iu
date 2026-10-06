@@ -8,7 +8,7 @@ export class Journal {
   private drawer = document.querySelector<HTMLElement>('#drawer')!;
   private returnFocus?: HTMLElement;
   private mode: 'collection' | 'about' = 'collection';
-  constructor(private discovery: Discovery, private interactions: InteractableRegistry, private activate: (id: string) => void, private toggleMusic: () => boolean, private musicEnabled: () => boolean) {
+  constructor(private discovery: Discovery, private interactions: InteractableRegistry, private activate: (id: string) => void, private toggleMusic: () => boolean, private musicEnabled: () => boolean, private look?: { get: () => boolean; toggle: () => boolean }) {
     document.querySelector('#collection')!.addEventListener('click', () => this.open('collection'));
     document.querySelector('#about')!.addEventListener('click', () => this.open('about'));
     this.drawer.addEventListener('click', event => {
@@ -19,6 +19,11 @@ export class Journal {
         const music = this.toggleMusic();
         target.textContent = t(music ? '轻音乐 · 已打开' : '轻音乐 · 已关闭');
         target.setAttribute('aria-pressed', String(music));
+      }
+      if (target?.dataset.action === 'look' && this.look) {
+        const paper = this.look.toggle();
+        target.textContent = t(paper ? '画风 · 水彩' : '画风 · 原版');
+        target.setAttribute('aria-pressed', String(paper));
       }
     });
     this.drawer.addEventListener('keydown', event => {
@@ -79,6 +84,7 @@ export class Journal {
         <p>可以翻一本书，听听雨，或者什么也不做。</p>
         <p>Mochi 是这里的小飞鼠室友。白天爱睡觉，晚上喜欢四处逛逛。你离开时，它也会照顾好自己。</p>
         <button class="text-button" data-action="music" aria-pressed="${this.musicEnabled()}">${this.musicEnabled() ? '轻音乐 · 已打开' : '轻音乐 · 已关闭'}</button>
+        ${this.look ? `<button class="text-button" data-action="look" aria-pressed="${this.look.get()}">${this.look.get() ? '画风 · 水彩' : '画风 · 原版'}</button>` : ''}
         <h3>在小屋里走走</h3><p>拖动环顾，滚轮或双指缩放。点开书后可以再读一页，按 Esc 回到小屋。</p>
         <p>也可以直接选择一个物件：</p>
         <div class="accessible-objects">${this.interactions.entries.map(entry => `<button data-object="${entry.id}"><span>${entry.label}</span><i data-lucide="arrow-right"></i></button>`).join('')}</div>

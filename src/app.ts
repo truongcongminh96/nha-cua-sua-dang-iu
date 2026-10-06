@@ -18,6 +18,7 @@ import { affordances, navigationLinks, pets } from './data/environment';
 import { Journal } from './ui/Journal';
 import { batchStaticMeshes } from './world/optimize';
 import { registerWorldTools } from './systems/WorldTools';
+import { LanternHalos, PainterlyRenderer, WindowLight } from './world/Painterly';
 
 const ui = new UI(document.querySelector('#app')!);
 const canvas = document.querySelector<HTMLCanvasElement>('#world-canvas')!;
@@ -30,6 +31,22 @@ const room = new Room(scene, interactions);
 const camera = new CameraRig(canvas);
 const time = new TimeOfDay(scene, room, initialTimeMode()); ui.setTime(time.mode);
 if (matchMedia('(pointer: coarse)').matches) { renderer.setPixelRatio(Math.min(devicePixelRatio, 1.4)); time.sunlight.shadow.mapSize.set(1024, 1024); }
+const coarsePointer = matchMedia('(pointer: coarse)').matches;
+// Xuan Paper watercolor look (phase 1). `?look=classic` or the About drawer switches back for comparison.
+const painter = new PainterlyRenderer(renderer, coarsePointer);
+const halos = new LanternHalos(room.lamps); scene.add(halos.group);
+const windowLight = new WindowLight(scene);
+let nightInk = time.mode === 'night' ? 1 : 0;
+function readLook() {
+  const param = new URLSearchParams(location.search).get('look');
+  if (param === 'classic' || param === 'paper') return param === 'paper';
+  try { return localStorage.getItem('sua-house-look') !== 'classic'; } catch { return true; }
+}
+function setLook(paper: boolean, persist = false) {
+  painter.enabled = paper; halos.group.visible = paper; windowLight.setEnabled(paper);
+  if (persist) try { localStorage.setItem('sua-house-look', paper ? 'paper' : 'classic'); } catch { /* Preference is optional. */ }
+}
+setLook(readLook());
 const readingLight = new THREE.SpotLight('#fff0ce', 0, 8, .58, .9, 1.5);
 scene.add(readingLight, readingLight.target);
 const audio = new RoomAudio(); audio.setTime(time.mode);
@@ -64,7 +81,7 @@ let closing: InteractableDefinition | undefined, closeAmount = 0;
 let quoteDelay = 0, petReadoutTimer = 0;
 let turning: { entry: InteractableDefinition; progress: number } | undefined;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-function resize() { renderer.setSize(innerWidth, innerHeight); camera.resize(innerWidth, innerHeight); }
+function resize() { renderer.setSize(innerWidth, innerHeight); camera.resize(innerWidth, innerHeight); painter.setSize(innerWidth, innerHeight); }
 window.addEventListener('resize', resize); resize();
 function showPage() {
   if (!active?.quoteIds) return;
@@ -127,7 +144,8 @@ function changeWeather() {
   ui.toast(raining ? '正在下雨' : '雨停了');
 }
 document.querySelector('#weather')!.addEventListener('click', changeWeather);
-journal = new Journal(discovery, interactions, id => { const entry = interactions.get(id); if (entry) activate(entry); }, () => { audio.music = !audio.music; if (audio.music && !audio.on) ui.toast('轻音乐已准备好，打开右上角声音即可聆听。'); return audio.music; }, () => audio.music);
+journal = new Journal(discovery, interactions, id => { const entry = interactions.get(id); if (entry) activate(entry); }, () => { audio.music = !audio.music; if (audio.music && !audio.on) ui.toast('轻音乐已准备好，打开右上角声音即可聆听。'); return audio.music; }, () => audio.music,
+  { get: () => painter.enabled, toggle: () => { setLook(!painter.enabled, true); return painter.enabled; } });
 
 function refreshLanguage() {
   ui.refreshLanguage(); ui.setTime(time.mode); updateSoundButton();
@@ -182,7 +200,9 @@ renderer.setAnimationLoop(() => {
   if (quoteDelay > 0) { quoteDelay -= dt; if (quoteDelay <= 0) { showPage(); document.querySelector<HTMLButtonElement>('#leave-focus')?.focus({ preventScroll: true }); } }
   petReadoutTimer += dt;
   if (petReadoutTimer > 30) { petReadoutTimer = 0; ui.setDiscoveries(discovery.count, discoveries.length); journal?.refresh(); }
-  renderer.render(scene, camera.camera);
+  halos.update(); windowLight.update(time.mode, dt, weather.mode === 'rain');
+  nightInk = THREE.MathUtils.damp(nightInk, time.mode === 'night' ? 1 : 0, 1.4, dt);
+  painter.render(scene, camera.camera, nightInk);
 });
 ui.ready();
 const disposeWorldTools = registerWorldTools({
@@ -193,7 +213,7 @@ const disposeWorldTools = registerWorldTools({
 });
 if (import.meta.hot) import.meta.hot.dispose(() => {
   stopLocaleListener(); disposeWorldTools();
-  renderer.setAnimationLoop(null); camera.dispose(); audio.dispose(); renderer.dispose();
+  renderer.setAnimationLoop(null); camera.dispose(); audio.dispose(); painter.dispose(); renderer.dispose();
   window.removeEventListener('keydown', onKeyDown);
   window.removeEventListener('resize', resize); document.removeEventListener('visibilitychange', visibility);
   scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Points || object instanceof THREE.Line) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(m => m.dispose()); } });
