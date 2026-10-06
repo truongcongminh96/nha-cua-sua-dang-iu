@@ -1,8 +1,8 @@
 # Milk Cinema — MVP integration requirements
 
-Status: revised implementation plan (2026-10-05), not a report of completed changes.
+Status: implemented (shared room, two movies, chat, sync — 2026-10-05). UI aligned with the shared tokens and entrance artwork on 2026-10-06; see [README.md](README.md). The sections below record the original requirements.
 
-Latest agreed scope: one shared room for **Sữa** and **Xiiu**. Both enter the same six-digit code **300492**, select their name, and choose between two preconfigured R2 movies. No room creation, invitation link, source selection, or upload UI is required in the main experience. This scope supersedes the general create/join flow described below; retain the existing player, synchronization, chat, responsive design, locales, and house navigation.
+Latest agreed scope: one shared room for **Sữa** and **Xiiu**. Both enter the same six-digit shared code (kept privately, never committed; rotate it with `supabase/snippets/rotate-cinema-pin.sql`), select their name, and choose between two preconfigured R2 movies. No room creation, invitation link, source selection, or upload UI is required in the main experience. This scope supersedes the general create/join flow described below; retain the existing player, synchronization, chat, responsive design, locales, and house navigation.
 
 Shared-room implementation:
 

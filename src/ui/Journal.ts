@@ -75,7 +75,7 @@ export class Journal {
       </div>`;
     } else {
       this.drawer.innerHTML = `${header}<div class="drawer-body">
-        <div class="welcome"><span class="home-seal" aria-hidden="true">家</span><p>来坐一会儿吧。</p></div>
+        <div class="welcome"><span class="home-seal seal-chip" aria-hidden="true">家</span><p>来坐一会儿吧。</p></div>
         <p>可以翻一本书，听听雨，或者什么也不做。</p>
         <p>Mochi 是这里的小飞鼠室友。白天爱睡觉，晚上喜欢四处逛逛。你离开时，它也会照顾好自己。</p>
         <button class="text-button" data-action="music" aria-pressed="${this.musicEnabled()}">${this.musicEnabled() ? '轻音乐 · 已打开' : '轻音乐 · 已关闭'}</button>

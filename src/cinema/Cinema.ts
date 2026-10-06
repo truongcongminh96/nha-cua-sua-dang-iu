@@ -2,6 +2,7 @@ import { createIcons, ArrowUpRight, ArrowUp, ArrowLeft, Play, RotateCcw, RotateC
 import { getLocale, onLocaleChange, setLocale } from '../data/i18n';
 import { c, errorCopy, localizeCinema } from './copy';
 import { cinemaUrl } from './routes';
+import { applyTheme, currentTheme, followSystemTheme } from '../ui/theme';
 import { configured } from './supabase/client';
 import { enterSharedRoom, loadRoom, roomSource, movies, selectMovie, type Movie, type Room, type Member } from './room/repository';
 import type { VideoSource } from './video/providers';
@@ -29,19 +30,13 @@ class Cinema {
   private room?: Room;
   private membershipTimer?: ReturnType<typeof setInterval>;
   constructor(private container: HTMLElement) {
-    container.innerHTML = `<main class="mc"><header class="mc-header"><a class="mc-brand" href="${cinemaUrl()}"><span class="mc-seal" aria-hidden="true">影</span><span>MILK CINEMA<small>Sữa Bea · <span data-copy="watch">${c('watch')}</span></small></span></a><nav aria-label="Cinema"><a class="mc-back-home" href="?page=choose"><i data-lucide="arrow-left"></i><span data-copy="home">${c('home')}</span></a><button data-locale="vi">VI</button><button data-locale="zh">中文</button><button data-theme aria-label="Giao diện sáng / tối"><i data-lucide="moon"></i></button></nav></header><div class="mc-content"></div><footer class="mc-footer"><a href="?page=choose" data-copy="home">${c('home')}</a><span data-copy="tagline">${c('tagline')}</span><span>PRIVATE CINEMA · FOR TWO</span></footer></main>`;
+    container.innerHTML = `<main class="mc"><header class="mc-header"><a class="mc-brand" href="${cinemaUrl()}"><span class="mc-seal seal-chip" aria-hidden="true">影</span><span>MILK CINEMA<small>Sữa Bea · <span data-copy="watch">${c('watch')}</span></small></span></a><nav aria-label="Cinema"><a class="mc-back-home" href="?page=choose"><i data-lucide="arrow-left"></i><span data-copy="home">${c('home')}</span></a><span class="mc-langs lang-switch"><button data-locale="vi" lang="vi" aria-label="Tiếng Việt">VI</button><span aria-hidden="true">/</span><button data-locale="zh" lang="zh-CN" aria-label="中文">中文</button></span><button data-theme aria-label="Giao diện sáng / tối"><i data-lucide="moon"></i></button></nav></header><div class="mc-content"></div><footer class="mc-footer"><a href="?page=choose" data-copy="home">${c('home')}</a><span data-copy="tagline">${c('tagline')}</span><span data-copy="privateCinema">${c('privateCinema')}</span></footer></main>`;
     this.root = container.querySelector('.mc')!; this.content = container.querySelector('.mc-content')!;
     container.querySelectorAll<HTMLButtonElement>('[data-locale]').forEach(button => button.addEventListener('click', () => setLocale(button.dataset.locale === 'zh' ? 'zh' : 'vi'), { signal: this.abort.signal }));
     container.querySelector('[data-theme]')!.addEventListener('click', () => {
-      const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = theme;
-      try { localStorage.setItem('sua-ui-theme',theme); } catch { /* Theme works in memory. */ }
-      this.refreshTheme();
+      applyTheme(currentTheme() === 'dark' ? 'light' : 'dark'); this.refreshTheme();
     }, { signal: this.abort.signal });
-    const preference = matchMedia('(prefers-color-scheme: dark)');
-    preference.addEventListener('change', () => {
-      let saved = null; try { saved = localStorage.getItem('sua-ui-theme'); } catch { /* Use system. */ }
-      if (!saved) document.documentElement.dataset.theme = preference.matches ? 'dark' : 'light'; this.refreshTheme();
-    }, { signal: this.abort.signal });
+    followSystemTheme(() => this.refreshTheme(), this.abort.signal);
     this.unsubscribe = onLocaleChange(() => this.localize());
     window.addEventListener('pagehide', () => this.destroy(), { signal: this.abort.signal });
     this.localize(); this.refreshTheme();
@@ -61,7 +56,7 @@ class Cinema {
   private entry(message = '') {
     this.screenAbort.abort(); this.screenAbort = new AbortController();
     this.root.classList.remove('mc-room-page');
-    this.content.innerHTML = `<section class="mc-form-layout mc-simple-entry"><div class="mc-form-intro"><p class="mc-eyebrow">MILK CINEMA · FOR TWO</p><h1 data-copy-html="hero">${c('hero')}</h1><p class="mc-lede" data-copy="simpleIntro">${c('simpleIntro')}</p><div class="mc-art" aria-hidden="true"><div class="mc-moon"></div><div class="mc-mountain mc-mountain-far"></div><div class="mc-mountain mc-mountain-near"></div><div class="mc-water"></div><span class="mc-art-glyph">影</span></div></div><form class="mc-form"><fieldset><legend data-copy="choosePerson">${c('choosePerson')}</legend><div class="mc-person-options"><label><input type="radio" name="person" value="Sữa" required><span>Sữa</span></label><label><input type="radio" name="person" value="Xiiu" required><span>Xiiu</span></label></div></fieldset><label for="cinema-pin" data-copy="sharedCode">${c('sharedCode')}</label><input id="cinema-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required aria-describedby="cinema-pin-hint"><p id="cinema-pin-hint" class="mc-field-hint" data-copy="sharedHint">${c('sharedHint')}</p>${this.setupNotice()}<p class="mc-form-error" role="alert">${esc(message)}</p><button type="submit" class="mc-primary" ${configured ? '' : 'disabled'}>${c('enter')}<span><i data-lucide="arrow-up-right"></i></span></button></form></section>`;
+    this.content.innerHTML = `<section class="mc-form-layout mc-simple-entry"><div class="mc-form-intro"><p class="mc-eyebrow" data-copy="eyebrow">${c('eyebrow')}</p><h1 data-copy-html="hero">${c('hero')}</h1><p class="mc-lede" data-copy="simpleIntro">${c('simpleIntro')}</p><div class="mc-art mc-art-door" aria-hidden="true"></div></div><form class="mc-form" novalidate><fieldset><legend data-copy="choosePerson">${c('choosePerson')}</legend><div class="mc-person-options"><label><input type="radio" name="person" value="Sữa" required><span>Sữa</span></label><label><input type="radio" name="person" value="Xiiu" required><span>Xiiu</span></label></div></fieldset><label for="cinema-pin" data-copy="sharedCode">${c('sharedCode')}</label><input id="cinema-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required placeholder="${c('pinPlaceholder')}" aria-describedby="cinema-pin-hint"><p id="cinema-pin-hint" class="mc-field-hint" data-copy="sharedHint">${c('sharedHint')}</p>${this.setupNotice()}<p class="mc-form-error" role="alert">${esc(message)}</p><button type="submit" class="mc-primary" ${configured ? '' : 'disabled'}>${c('enter')}<span><i data-lucide="arrow-up-right"></i></span></button></form></section>`;
     const form = this.content.querySelector('form')!;
     let savedPerson: string | null = null; try { savedPerson = localStorage.getItem('milk-cinema.person'); } catch { /* Optional preference. */ }
     form.querySelectorAll<HTMLInputElement>('[name=person]').forEach(input => { input.checked = input.value === savedPerson; });
@@ -69,10 +64,19 @@ class Cinema {
       event.preventDefault(); if (!configured) return;
       const button = form.querySelector<HTMLButtonElement>('[type=submit]')!;
       const error = form.querySelector<HTMLElement>('.mc-form-error')!;
-      const data = new FormData(form); const person = String(data.get('person'));
+      const data = new FormData(form); const person = String(data.get('person') ?? '');
+      // Validate in-page so the message is localized and points at a visible control.
+      const pin = form.querySelector<HTMLInputElement>('#cinema-pin')!;
+      const invalid = !person ? 'invalidPerson' : !/^[0-9]{6}$/.test(pin.value) ? 'pinFormat' : null;
+      pin.setAttribute('aria-invalid', String(invalid === 'pinFormat'));
+      if (invalid) {
+        error.textContent = c(invalid);
+        (invalid === 'pinFormat' ? pin : form.querySelector<HTMLInputElement>('[name=person]')!).focus();
+        return;
+      }
       button.disabled = true; button.textContent = c('pending'); error.textContent = '';
       try {
-        const result = await enterSharedRoom(String(data.get('pin')), person);
+        const result = await enterSharedRoom(pin.value, person);
         if (this.disposed) return;
         try { localStorage.setItem('milk-cinema.person', person); } catch { /* Preference is optional. */ }
         history.replaceState(null, '', cinemaUrl());
@@ -138,7 +142,7 @@ class Cinema {
   }
   private roomShell(name: string, room: Room | null, source: VideoSource, members: Member[], memberId: string) {
     this.root.classList.add('mc-room-page');
-    this.content.innerHTML = `<div class="mc-room-heading"><div><a class="mc-text-link" href="${cinemaUrl()}"><i data-lucide="arrow-left"></i>${c('cinema')}</a><h1 data-user-content>${esc(name)}</h1><p class="mc-room-state" role="status">${c(room ? 'reconnecting' : 'previewNotice')}</p></div><div class="mc-room-meta"><span class="mc-meta">SỮA & XIIU · FOR TWO</span><div class="mc-members"></div></div></div><div class="mc-watch-grid"><div class="mc-film-column"><div class="mc-player-slot"></div><div class="mc-below-player"><div class="mc-reactions" role="group" aria-label="${c('reactions')}">${reactions.map(e => `<button aria-label="${e}" data-reaction="${e}">${e}</button>`).join('')}</div><button class="mc-open-chat"><i data-lucide="message-circle"></i>${c('chat')}</button></div><section class="mc-playlist"><h2 data-copy="movieList">${c('movieList')}</h2><p class="mc-field-hint" data-copy="movieHint">${c('movieHint')}</p><div class="mc-movie-list"></div><p class="mc-movie-error" role="alert"></p></section></div><div class="mc-chat-slot"></div></div><dialog class="mc-chat-sheet" aria-label="${c('chat')}"></dialog>`;
+    this.content.innerHTML = `<div class="mc-room-heading"><div><a class="mc-text-link" href="${cinemaUrl()}"><i data-lucide="arrow-left"></i>${c('cinema')}</a><h1 data-user-content>${esc(name)}</h1><p class="mc-room-state" role="status">${c(room ? 'reconnecting' : 'previewNotice')}</p></div><div class="mc-room-meta"><span class="mc-meta" data-copy="roomMeta">${c('roomMeta')}</span><div class="mc-members"></div></div></div><div class="mc-watch-grid"><div class="mc-film-column"><div class="mc-player-slot"></div><div class="mc-below-player"><div class="mc-reactions" role="group" aria-label="${c('reactions')}">${reactions.map(e => `<button aria-label="${e}" data-reaction="${e}">${e}</button>`).join('')}</div><button class="mc-open-chat"><i data-lucide="message-circle"></i>${c('chat')}</button></div><section class="mc-playlist"><h2 data-copy="movieList">${c('movieList')}</h2><p class="mc-field-hint" data-copy="movieHint">${c('movieHint')}</p><div class="mc-movie-list"></div><p class="mc-movie-error" role="alert"></p></section></div><div class="mc-chat-slot"></div></div><dialog class="mc-chat-sheet" aria-label="${c('chat')}"></dialog>`;
     this.player = new VideoPlayer(source); this.content.querySelector('.mc-player-slot')!.append(this.player.el);
     this.chat = new ChatPanel(room?.id ?? null,memberId); this.content.querySelector('.mc-chat-slot')!.append(this.chat.el);
     if (room) this.player.setInteractive(false);

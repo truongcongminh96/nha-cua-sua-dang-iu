@@ -145,3 +145,4 @@ vite.config.ts.timestamp-*
 # Local UI verification captures and browser fixtures
 output/playwright/
 .playwright-cli/
+.claude/

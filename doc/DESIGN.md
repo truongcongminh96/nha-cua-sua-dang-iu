@@ -1,5 +1,7 @@
 # NineTails Workshop — Design Specification v2 — "Xuan Paper" (宣紙)
 
+> **Ghi chú cho Sữa Bea:** đây là đặc tả gốc của dự án NineTails Workshop (Next.js, chương mục, ⌘K), dùng làm tham chiếu ngôn ngữ hình ảnh Xuan Paper. Quy tắc áp dụng cho repo này và những điểm khác với tài liệu dưới đây nằm trong [README.md](README.md).
+
 APPROVED DIRECTION. The living mockup at `design-explorations/a-xuan-paper.html`
 (screenshot `a-xuan-paper.png`) is ground truth for mood, spacing, and type.
 v1 ("Ink & Foxfire", dark/ember) is retired entirely.
@@ -35,7 +37,6 @@ count and chapter numerals come from the canonical manifest.
   occasionally rotated 2–3°. The brand mark is a 九 seal.
 - Giant translucent brush hanzi watermarks (opacity ~0.05) as the only "art":
   狐 on the home hero; a per-chapter glyph on chapter pages
-  (〇迎 一基 二狐 三戰 四敵 五境 六進 七story: story→書? use 話 8→法).
   Chapter glyph map: 0 迎, 1 基, 2 狐, 3 戰, 4 敵, 5 境, 6 升, 7 話, 8 法.
 - Vertical writing-mode annotations (writing-mode: vertical-rl), e.g.
   九尾工坊 · 設計之書, as quiet page furniture.

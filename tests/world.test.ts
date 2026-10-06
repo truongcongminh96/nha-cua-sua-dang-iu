@@ -5,7 +5,7 @@ import { quotes, books } from '../src/data/quotes';
 import { Discovery, discoveries, localDate, type LocalStore } from '../src/systems/Discovery';
 import { Navigation } from '../src/pet/Navigation';
 import { PetBehavior, seededRandom } from '../src/pet/PetBehavior';
-import { localTimeMode } from '../src/systems/TimeOfDay';
+import { initialTimeMode, localTimeMode } from '../src/systems/TimeOfDay';
 import { AssetCache } from '../src/systems/Assets';
 
 test('all furniture destinations are reachable, including a safe route home', () => {
@@ -71,6 +71,11 @@ test('time selection respects the local clock boundaries', () => {
   assert.equal(localTimeMode(5), 'night'); assert.equal(localTimeMode(6), 'day');
   assert.equal(localTimeMode(15), 'day'); assert.equal(localTimeMode(16), 'golden'); assert.equal(localTimeMode(18), 'night');
   assert.equal(localDate(new Date(2026, 8, 11, 0, 1)), '2026-09-11');
+});
+
+test('the dark site theme opens the house at night', () => {
+  assert.equal(initialTimeMode('dark', 10), 'night');
+  assert.equal(initialTimeMode('light', 10), 'day'); assert.equal(initialTimeMode('light', 20), 'night');
 });
 
 test('asset requests deduplicate and a failed request can be retried', async () => {

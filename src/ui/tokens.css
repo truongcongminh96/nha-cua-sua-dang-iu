@@ -1,0 +1,26 @@
+/* Xuan Paper tokens shared by the entrance, cinema and house. Pages map extras (panel, selected) locally. */
+:root {
+  --paper: #f6f2e9; --deep: #efeadd; --hover: #efeadd;
+  --ink: #1c1a17; --muted: rgba(28,26,23,.62); --line: rgba(28,26,23,.12);
+  --seal: #b23a2b; --seal-ink: #f6f2e9; --focus: #b23a2b;
+  --serif: 'Fraunces', 'Noto Serif SC', Georgia, serif;
+  --mono: 'IBM Plex Mono', 'Noto Serif SC', monospace;
+  --ease: cubic-bezier(.32, .72, 0, 1);
+}
+/* Night Ink: the site dark theme, and the house at night. */
+html[data-theme='dark'] :is(.entrance, .mc), body[data-time='night'] {
+  --paper: #131010; --deep: #1b1614; --hover: #1b1614;
+  --ink: #efe9dc; --muted: rgba(239,233,220,.62); --line: rgba(239,233,220,.14);
+  --seal: #c9553f; --seal-ink: #efe9dc; --focus: #c9553f;
+}
+
+/* One language switch everywhere: mono, "VI / 中文", underlined when active. */
+.lang-switch { display: flex; align-items: center; gap: 2px; font: 12px var(--mono); }
+.lang-switch button { min-width: 44px; min-height: 44px; padding: 0 7px; border-radius: 2px; background: transparent; }
+.lang-switch button[aria-pressed='true'] { background: transparent; color: var(--ink); }
+.lang-switch button:hover { background: var(--hover); }
+.lang-switch [data-locale][aria-pressed='true'] { background: transparent; color: var(--ink); text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; }
+.lang-switch > span { color: var(--muted); }
+
+/* Seal chips: filled seal red with paper hanzi (DESIGN §1). */
+.seal-chip { display: inline-grid; place-items: center; flex-shrink: 0; background: var(--seal); color: var(--seal-ink); border-radius: 2px; font-family: 'Noto Serif SC', serif; line-height: 1; transform: rotate(-2deg); }

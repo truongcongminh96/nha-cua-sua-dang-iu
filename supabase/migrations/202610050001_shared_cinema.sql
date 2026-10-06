@@ -7,7 +7,8 @@ create table milk_private.shared_cinema (
 );
 revoke all on milk_private.shared_cinema from public, anon, authenticated;
 insert into milk_private.shared_cinema(id,pin_digest,video_url) values (
-  true, extensions.digest('300492','sha256'),
+  -- Random digest: no code works until the owner sets one with supabase/snippets/rotate-cinema-pin.sql.
+  true, extensions.digest(gen_random_uuid()::text,'sha256'),
   'https://pub-492f9b31f90744b0911a075de7ba931e.r2.dev/movies/c31893a1-aac9-430c-99d3-25df52d6dcb6/1393416545880003_001_1080p.mp4'
 );
 

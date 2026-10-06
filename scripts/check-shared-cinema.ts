@@ -3,11 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const env = Object.fromEntries(readFileSync('.env.local', 'utf8').split('\n').filter(line => line.includes('=')).map(line => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]));
+// The shared code is private: set CINEMA_PIN in .env.local (gitignored) or the shell.
+const cinemaPin = process.env.CINEMA_PIN ?? env.CINEMA_PIN ?? '';
+if (!/^[0-9]{6}$/.test(cinemaPin)) throw new Error('Set a six-digit CINEMA_PIN in .env.local to run this check.');
 const clients = Array.from({ length: 4 }, () => createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } }));
 try {
   for (const client of clients) assert.ifError((await client.auth.signInAnonymously()).error);
   const [sua, xiiu, outsider, replacement] = clients;
-  const enter = (client: typeof sua, person: string, pin = '300492') => client.rpc('cinema_enter_shared', { p_pin: pin, p_person: person });
+  const enter = (client: typeof sua, person: string, pin = cinemaPin) => client.rpc('cinema_enter_shared', { p_pin: pin, p_person: person });
   const bad = await enter(outsider, 'Sữa', '000000'); assert.ifError(bad.error); assert.equal(bad.data.error, 'invalidPin');
   const unknown = await enter(outsider, 'Other'); assert.equal(unknown.data.error, 'invalidPerson');
   const rooms = await Promise.all([enter(sua, 'Sữa'), enter(xiiu, 'Xiiu')]);

@@ -5,7 +5,7 @@ Ngày kiểm tra: 03/10/2026. Hướng thiết kế: nhật ký giấy ấm, the
 ## Thay đổi
 
 - Giảm slogan, chữ hoa và lời chào lặp lại; tên nhà, trạng thái thời điểm và Mochi ngắn hơn.
-- Nhóm nút nền giấy, viền mảnh, bo 8–12px; không blur trên nút hoặc bóng hover. Font tải ở một nơi.
+- Nhóm nút nền giấy, viền mảnh, bo 2px theo DESIGN.md (ghi chú ban đầu là 8–12px, đã chỉnh 06/10/2026); không blur trên nút hoặc bóng hover. Font tải ở một nơi.
 - Nhật ký chỉ ghi những khoảnh khắc đã gặp, có ngày địa phương, trạng thái trống và bộ đếm theo danh mục thực.
 - Drawer có header/nút đóng cố định, thân cuộn; giữ focus và vị trí đọc khi refresh hoặc đổi locale. Sai số cuộn 1px do trình duyệt làm tròn được chấp nhận.
 - Tooltip nằm trong viewport; toast xuống dòng; chế độ đọc ẩn và đặt các nhóm khám phá thành `inert`.

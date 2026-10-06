@@ -4,16 +4,21 @@ export type TimeMode = 'day' | 'golden' | 'night';
 export const timePresets = {
   day: { background: '#f6f2e9', ambient: '#faf6ed', sky: '#daddd2', sun: '#fff4df', sunPower: 2.8, fill: 1.65, lamp: .08, bulb: .1, position: [-3, 8, -5], status: '今天，小屋有一点阳光。', label: '日光' },
   golden: { background: '#ebe3d5', ambient: '#f3e1c8', sky: '#e9c69e', sun: '#ffdbac', sunPower: 3.15, fill: 1.35, lamp: .28, bulb: .5, position: [-4, 5, -6], status: '把日落，留在这里一会儿。', label: '黄昏' },
-  night: { background: '#252522', ambient: '#c3c6c6', sky: '#353d3a', sun: '#b5d7ee', sunPower: .45, fill: .72, lamp: 3.4, bulb: 2.1, position: [1, 7, -5], status: '夜深了，有一盏灯在等你。', label: '夜晚' },
+  night: { background: '#131010', ambient: '#c3c6c6', sky: '#353d3a', sun: '#b5d7ee', sunPower: .45, fill: .72, lamp: 3.4, bulb: 2.1, position: [1, 7, -5], status: '夜深了，有一盏灯在等你。', label: '夜晚' },
 } as const;
 export function localTimeMode(hour = new Date().getHours()): TimeMode { return hour >= 18 || hour < 6 ? 'night' : hour >= 16 ? 'golden' : 'day'; }
+/** The site-wide dark theme opens the house at night so it matches the entrance and cinema. */
+export function initialTimeMode(theme = document.documentElement.dataset.theme, hour?: number): TimeMode {
+  return theme === 'dark' ? 'night' : localTimeMode(hour);
+}
 export class TimeOfDay {
   mode: TimeMode = localTimeMode();
   readonly sunlight = new THREE.DirectionalLight('#fff4df', 3);
   readonly ambient = new THREE.HemisphereLight('#faf6ed', '#b7a78d', 1.65);
   private bounce = new THREE.DirectionalLight('#f7e4c1', .7);
   private color = new THREE.Color();
-  constructor(private scene: THREE.Scene, private room: Room) {
+  constructor(private scene: THREE.Scene, private room: Room, initial: TimeMode = localTimeMode()) {
+    this.mode = initial;
     scene.background = new THREE.Color(timePresets[this.mode].background);
     this.sunlight.position.set(-3, 8, -5); this.sunlight.castShadow = true;
     this.sunlight.shadow.mapSize.set(2048, 2048); this.sunlight.shadow.camera.left = -7; this.sunlight.shadow.camera.right = 7;

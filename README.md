@@ -70,7 +70,7 @@ tests/                     Kiểm tra hệ thống không cần GPU
 
 ## Thiết kế giao diện
 
-UI theo hướng Xuan Paper với giấy ngà, mực đậm và đỏ dấu: điều khiển gọn, lời giao diện ngắn và nhật ký chỉ ghi những khoảnh khắc đã gặp. Xem [đặc tả thiết kế](doc/DESIGN.md), [skill UI của dự án](doc/SKILL.md) và [kết quả kiểm chứng UI](doc/UI-VERIFICATION.md). Căn nhà 3D là một thư phòng với cửa sổ tròn, khung gỗ mảnh, ghế dài linen, đèn giấy có gân, bàn trà, thảm dệt và bonsai; xem [kiểm chứng cảnh 3D](doc/SCENE-VERIFICATION.md).
+UI theo hướng Xuan Paper với giấy ngà, mực đậm và đỏ dấu: điều khiển gọn, lời giao diện ngắn và nhật ký chỉ ghi những khoảnh khắc đã gặp. Bắt đầu từ [doc/README.md](doc/README.md): quy tắc giao diện của repo và mục lục tài liệu ([đặc tả gốc](doc/DESIGN.md), [skill UI](doc/SKILL.md), [kiểm chứng UI](doc/UI-VERIFICATION.md), [trang chọn cửa](doc/ENTRANCE.md)). Căn nhà 3D là một thư phòng với cửa sổ tròn, khung gỗ mảnh, ghế dài linen, đèn giấy có gân, bàn trà, thảm dệt và bonsai; xem [kiểm chứng cảnh 3D](doc/SCENE-VERIFICATION.md).
 
 ## Mở rộng
 
@@ -102,7 +102,7 @@ URL mặc định có hai card **Đi xem phim** / **Vô nhà**. `?page=home` m�
 
 ## Milk Cinema
 
-Mở `http://localhost:5173/?page=cinema` hoặc chọn **Đi xem phim** từ trang chủ. Chọn **Sữa** hoặc **Xiiu**, nhập mã chung **300492** rồi vào cùng một phòng. Hai phim R2 đã được cấu hình sẵn; không cần tạo phòng, dán nguồn phim hay gửi liên kết mời. Hai người có thể phát/dừng/tua, trò chuyện và gửi cảm xúc. Dùng hai thiết bị hoặc hai browser profile riêng vì danh tính anonymous được lưu theo trình duyệt.
+Mở `http://localhost:5173/?page=cinema` hoặc chọn **Đi xem phim** từ trang chủ. Chọn **Sữa** hoặc **Xiiu**, nhập mã phòng chung (hai bạn tự giữ, không ghi trong repo) rồi vào cùng một phòng. Đổi mã bằng [supabase/snippets/rotate-cinema-pin.sql](supabase/snippets/rotate-cinema-pin.sql). Hai phim R2 đã được cấu hình sẵn; không cần tạo phòng, dán nguồn phim hay gửi liên kết mời. Hai người có thể phát/dừng/tua, trò chuyện và gửi cảm xúc. Dùng hai thiết bị hoặc hai browser profile riêng vì danh tính anonymous được lưu theo trình duyệt.
 
 Player có điều khiển riêng, âm lượng, toàn màn hình, tiến độ, tua 10 giây và phím Space / ← / → / M / F. Chat trên điện thoại mở thành bottom sheet. Giao diện hỗ trợ Việt/Trung và sáng/tối. Khi browser chặn autoplay, bấm **Chạm để bắt đầu xem**. Khi chủ phòng vắng, shared controls chờ chủ phòng kết nối lại.
 
