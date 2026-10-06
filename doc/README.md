@@ -45,3 +45,20 @@ Sữa Bea có ba khu dùng chung một ngôn ngữ Xuan Paper: **trang chọn c�
 - **Hiệu năng:** điện thoại mật độ điểm ảnh cao vẽ lớp nét ở 65% độ phân giải. Cảnh nhỏ thì nét nhạt hơn và hạt màu mịn hơn. Lượt vẽ nét không vẽ lại bản đồ bóng. Hiệu ứng không có chuyển động nên không ảnh hưởng tới cài đặt giảm chuyển động.
 - **So sánh:** nút "Kiểu vẽ" trong bảng Về căn nhà (lưu ở `sua-house-look`), hoặc thêm `?look=classic` / `?look=paper` vào URL.
 - **Kiểm chứng (06/10/2026):** build, lint, test 26/26. Chromium 1440px ngày, hoàng hôn, đêm, bản 3D gốc; 390px hoàng hôn. Đã thử chế độ đọc sách, bấm chọn đồ vật, nút chuyển kiểu vẽ. Không có lỗi trên trang. Chưa đo FPS trên điện thoại thật.
+
+## Căn nhà: kiến trúc Trung Hoa (giai đoạn 2)
+
+Các chi tiết kiểu Nhật được thay bằng đồ vật thư phòng Giang Nam trong [`src/world/Room.ts`](../src/world/Room.ts). Vị trí 5 cuốn sách, đồ vật tương tác và 8 điểm đáp của Mochi giữ nguyên.
+
+| Trước | Sau |
+| --- | --- |
+| Thang shoji hai bên cửa sổ | Bình phong song gỗ đèn lồng cẩm (灯笼锦) trên nền giấy (`latticePanel`) |
+| Thảm tatami | Thảm viền xanh chàm, hoa văn chữ hồi (回纹) và mây (祥云) vẽ bằng canvas (`paintRug`) |
+| Đèn Akari | Đèn lồng tròn đầy hơn, nắp gỗ sơn, tua đỏ; đèn sàn có xà ngang. Đèn bàn kim loại thành đèn lồng nhỏ trên giá gỗ |
+| Kệ sách | Bác cổ giá: vách ngăn so le, nửa tầng, sách đóng chỉ xếp chồng, bình men ngọc, đỉnh kệ uốn mây |
+| Mép tường cắt trống | Mái ngói trên đỉnh tường (墙帽): hai mái ngói, ngói đầu mái hướng vào phòng, nóc cong ở hai đầu tự do (`wallCoping`) |
+| Bàn làm việc | Thư án: chén trà men ngọc, ống bút tre, nghiên mực, gác bút hình núi, diềm bàn |
+| Ghế hiện đại có đệm | Ghế quan mạo kiểu Minh: chân tròn, tựa lưng uốn chữ S, xà tựa hai đầu vểnh |
+| Bình cắm hoa ikebana | Mai bình men ngọc cắm một cành mai |
+
+Kiểm chứng (06/10/2026): build, lint, test 26/26. Số mesh trước khi gộp là 1154, sau khi gộp còn 183 (bản trước là 165). Đã thử trên Chromium ở 1440px (ngày, hoàng hôn, đêm, phóng gần) và 390px (hoàng hôn). Không có lỗi trên trang.
