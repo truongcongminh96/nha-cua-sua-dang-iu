@@ -6,7 +6,7 @@ import './entrance.css';
 /** Keep the illustrated threshold light: Three.js only loads after entering the house. */
 export function showEntrance(container: HTMLElement) {
   const artwork = document.documentElement.dataset.theme === 'dark'
-    ? '/images/entrance-doors-night.jpg' : '/images/entrance-doors.jpg';
+    ? '/images/entrance-cute-paper-night.jpg' : '/images/entrance-cute-paper.jpg';
   container.innerHTML = `<main class="entrance">
     <header class="entrance-header">
       <a class="entrance-name" href="?page=choose"><span>Sữa Bea</span><span class="entrance-seal" aria-hidden="true">家</span></a>
@@ -44,7 +44,7 @@ export function showEntrance(container: HTMLElement) {
   const updateTheme = () => {
     const dark = document.documentElement.dataset.theme === 'dark';
     container.querySelectorAll<HTMLImageElement>('[data-door-art]').forEach(image => {
-      const source = dark ? '/images/entrance-doors-night.jpg' : '/images/entrance-doors.jpg';
+      const source = dark ? '/images/entrance-cute-paper-night.jpg' : '/images/entrance-cute-paper.jpg';
       if (image.getAttribute('src') !== source) image.src = source;
     });
     themeButton.innerHTML = `<i data-lucide="${dark ? 'sun' : 'moon'}"></i>`;

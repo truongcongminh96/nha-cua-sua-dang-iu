@@ -2,7 +2,8 @@
   --paper: #f6f2e9; --hover: #efeadd; --ink: #1c1a17; --muted: rgba(28,26,23,.62);
   --line: rgba(28,26,23,.12); --seal: #b23a2b; --focus: var(--seal);
   height: 100%; overflow: auto; display: flex; flex-direction: column;
-  --door-art: url('/images/entrance-doors.jpg');
+  --door-art: url('/images/entrance-cute-paper.jpg');
+  --scene-width: min(100vw, 1400px);
   position: relative; background: var(--paper);
   color: var(--ink); user-select: text; color-scheme: light;
   padding: max(12px, env(safe-area-inset-top, 0px)) 0 max(16px, env(safe-area-inset-bottom, 0px));
@@ -14,16 +15,18 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%231c1a17' filter='url(%23grain)' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
 }
 .entrance::after {
-  content: ''; position: absolute; left: 50%; top: max(0px, calc(200px - 12.61vw));
-  width: min(100%, 1586px); height: min(62.55vw, 992px); transform: translateX(-50%);
+  content: ''; position: absolute; left: 50%; top: max(0px, calc(220px - var(--scene-width) * .0946));
+  width: var(--scene-width); height: calc(var(--scene-width) * .62547); transform: translateX(-50%);
   background: var(--door-art) center / 100% 100% no-repeat; pointer-events: none; z-index: -1;
   /* Fade only the empty paper margins; the doors retain their painted detail. */
-  mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 84%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 84%, transparent),
+    linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  mask-composite: intersect;
 }
 html[data-theme='dark'] .entrance {
   --paper: #131010; --hover: #1b1614; --ink: #efe9dc; --muted: rgba(239,233,220,.62);
   --line: rgba(239,233,220,.14); --seal: #c9553f; color-scheme: dark;
-  --door-art: url('/images/entrance-doors-night.jpg');
+  --door-art: url('/images/entrance-cute-paper-night.jpg');
 }
 .entrance a { color: inherit; text-decoration: none; }
 .entrance-header {
@@ -41,13 +44,13 @@ html[data-theme='dark'] .entrance {
 .entrance-languages .entrance-theme { display: grid; place-items: center; text-decoration: none; }
 .entrance-theme svg { width: 23px; height: 23px; }
 .entrance-theme svg.lucide-moon { fill: currentColor; stroke-width: 0; }
-.entrance-content { width: 100%; max-width: 1586px; margin: 0 auto; flex-shrink: 0; }
+.entrance-content { width: 100%; max-width: 1400px; margin: 0 auto; flex-shrink: 0; }
 .entrance-hero { padding: 24px 24px 0; text-align: center; }
 .entrance h1 { font: 300 clamp(40px, 4.35vw, 70px)/1.2 var(--serif); letter-spacing: -.035em; margin: 0; text-wrap: balance; }
 .entrance-intro { font: 400 clamp(16px, 1.4vw, 22px)/1.7 var(--serif); margin: 10px 0 0; color: var(--muted); }
 .destination-doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .destination-door { display: block; min-width: 0; text-align: center; -webkit-tap-highlight-color: transparent; }
-.destination-art { position: relative; display: block; overflow: hidden; aspect-ratio: 793 / 550; pointer-events: none; }
+.destination-art { position: relative; display: block; overflow: hidden; aspect-ratio: 793 / 625; pointer-events: none; }
 /* Both doors share one painting. Crop its paper margins in CSS so each is a real link. */
 .destination-art img {
   position: absolute; width: 200%; max-width: none; height: auto; left: 0; top: -26.23%;
@@ -74,7 +77,7 @@ html[data-theme='dark'] .entrance {
   .entrance-header { width: calc(100% - 48px); }
   .entrance-hero { padding-top: 32px; }
   .destination-copy h2 { gap: 12px; }
-  .destination-art { aspect-ratio: 793 / 600; }
+  .destination-art { aspect-ratio: 793 / 670; }
   .destination-arrow { width: 34px; height: 34px; }
   .destination-copy p { font-size: 15px; }
   .entrance-footer { gap: 12px; }
@@ -90,8 +93,8 @@ html[data-theme='dark'] .entrance {
   .entrance h1 { font-size: clamp(36px, 9.7vw, 54px); }
   .entrance-intro { font-size: 16px; margin-top: 12px; }
   .destination-doors { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .destination-art { aspect-ratio: 793 / 610; mask-image: linear-gradient(to bottom, transparent, #000 5%, #000 96%, transparent); }
-  .destination-art img { visibility: visible; }
+  .destination-art { aspect-ratio: 793 / 680; mask-image: linear-gradient(to bottom, transparent, #000 3%, #000 96%, transparent); }
+  .destination-art img { visibility: visible; top: -14.706%; }
   .destination-door--cinema .destination-copy { padding: 10px 20px 24px 27%; }
   .destination-door--home .destination-copy { padding: 10px 27% 24px 20px; }
   .destination-copy h2 { font-size: 27px; gap: 14px; }

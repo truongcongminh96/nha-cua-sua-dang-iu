@@ -1,5 +1,7 @@
 # Trang chọn hai cánh cửa
 
+Bản hiện tại: [Cute Xuan Paper](ENTRANCE-CUTE-PAPER.md). Nội dung bên dưới ghi lại lần dựng theo ảnh tham chiếu ban đầu.
+
 Ngày kiểm tra: 06/10/2026. Tham chiếu: ảnh người dùng cung cấp và ngôn ngữ Xuan Paper trong `DESIGN.md`, `SKILL.md`.
 
 ## Giao diện
