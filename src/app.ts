@@ -6,7 +6,8 @@ import { CameraRig } from './systems/Camera';
 import { TimeOfDay, initialTimeMode, type TimeMode } from './systems/TimeOfDay';
 import { InteractableRegistry, type InteractableDefinition } from './systems/Interactable';
 import { quotes } from './data/quotes';
-import { UI, icons } from './ui/UI';
+import { UI } from './ui/UI';
+import { discoverySeals } from './ui/copy';
 import { applyTheme } from './ui/theme';
 import { Weather } from './systems/Weather';
 import { RoomAudio } from './systems/Audio';
@@ -18,6 +19,10 @@ import { affordances, navigationLinks, pets } from './data/environment';
 import { Journal } from './ui/Journal';
 import { batchStaticMeshes } from './world/optimize';
 import { registerWorldTools } from './systems/WorldTools';
+import { LanternHalos, PainterlyRenderer, WindowLight } from './world/Painterly';
+import { Puffs, recordVisit } from './world/Rituals';
+import { Calligraphy } from './ui/Calligraphy';
+import { localDate } from './systems/Discovery';
 
 const ui = new UI(document.querySelector('#app')!);
 const canvas = document.querySelector<HTMLCanvasElement>('#world-canvas')!;
@@ -30,6 +35,22 @@ const room = new Room(scene, interactions);
 const camera = new CameraRig(canvas);
 const time = new TimeOfDay(scene, room, initialTimeMode()); ui.setTime(time.mode);
 if (matchMedia('(pointer: coarse)').matches) { renderer.setPixelRatio(Math.min(devicePixelRatio, 1.4)); time.sunlight.shadow.mapSize.set(1024, 1024); }
+const coarsePointer = matchMedia('(pointer: coarse)').matches;
+// Xuan Paper watercolor look (phase 1). `?look=classic` or the About drawer switches back for comparison.
+const painter = new PainterlyRenderer(renderer, coarsePointer);
+const halos = new LanternHalos(room.lamps); scene.add(halos.group);
+const windowLight = new WindowLight(scene);
+let nightInk = time.mode === 'night' ? 1 : 0;
+function readLook() {
+  const param = new URLSearchParams(location.search).get('look');
+  if (param === 'classic' || param === 'paper') return param === 'paper';
+  try { return localStorage.getItem('sua-house-look') !== 'classic'; } catch { return true; }
+}
+function setLook(paper: boolean, persist = false) {
+  painter.enabled = paper; halos.group.visible = paper; windowLight.setEnabled(paper);
+  if (persist) try { localStorage.setItem('sua-house-look', paper ? 'paper' : 'classic'); } catch { /* Preference is optional. */ }
+}
+setLook(readLook());
 const readingLight = new THREE.SpotLight('#fff0ce', 0, 8, .58, .9, 1.5);
 scene.add(readingLight, readingLight.target);
 const audio = new RoomAudio(); audio.setTime(time.mode);
@@ -39,9 +60,18 @@ try { store = localStorage; } catch { /* Browsers may disable device storage. Ke
 let journal: Journal | undefined;
 const discovery = new Discovery(store, (count, definition) => {
   ui.setDiscoveries(count, discoveries.length);
-  if (definition) ui.toast(definition.label);
+  if (definition) ui.toast(definition.label, discoverySeals[definition.id]);
   journal?.refresh();
 });
+const puffs = new Puffs(); scene.add(puffs.group);
+// The plum branch keeps one blossom for every day the house was visited on this device.
+room.setBlossoms(recordVisit(store, localDate()));
+let customScroll = false;
+void Calligraphy.load().then(image => { if (image) { room.setScrollArtwork(image); customScroll = true; } });
+const calligraphy = new Calligraphy(ui.root, written => {
+  const copy = document.createElement('canvas'); copy.width = written.width; copy.height = written.height; copy.getContext('2d')!.drawImage(written, 0, 0);
+  room.setScrollArtwork(copy); customScroll = true; ui.toast('字挂上墙了。'); discovery.record('brush-writing'); audio.page();
+}, () => { room.setScrollArtwork(null); customScroll = false; ui.toast('换回「慢」字了。'); }, () => customScroll, () => canvas.focus({ preventScroll: true }));
 const ambience = new Ambience(scene, id => { if (!camera.focused) discovery.record(id); });
 const navigation = new Navigation(affordances, navigationLinks);
 const residents = pets.map(definition => {
@@ -57,6 +87,11 @@ const residents = pets.map(definition => {
 });
 for (const part of room.ambient) batchStaticMeshes(part.object, []);
 batchStaticMeshes(room.root, [room.quoteGroup, ...room.ambient.map(a => a.object), ...interactions.entries.map(i => i.object)]);
+// Static action objects (lanterns, the writing set, the fruit bowl) batch inside their own group; batches keep the interaction id.
+for (const entry of interactions.entries.filter(e => e.id.startsWith('lantern-') || e.id === 'brush-writing' || e.id === 'mochi-treat')) {
+  batchStaticMeshes(entry.object, []);
+  entry.object.traverse(child => { child.userData.interactionId = entry.id; });
+}
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.ShadowMaterial({ color: '#5e6450', opacity: .14 }));
 ground.rotation.x = -Math.PI / 2; ground.position.y = -.36; ground.receiveShadow = true; ground.userData.ignoreRaycast = true; scene.add(ground);
 let active: InteractableDefinition | undefined, page = 0, openAmount = 0;
@@ -64,18 +99,53 @@ let closing: InteractableDefinition | undefined, closeAmount = 0;
 let quoteDelay = 0, petReadoutTimer = 0;
 let turning: { entry: InteractableDefinition; progress: number } | undefined;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-function resize() { renderer.setSize(innerWidth, innerHeight); camera.resize(innerWidth, innerHeight); }
+function resize() { renderer.setSize(innerWidth, innerHeight); camera.resize(innerWidth, innerHeight); painter.setSize(innerWidth, innerHeight); }
 window.addEventListener('resize', resize); resize();
+let pageTurn = false;
 function showPage() {
   if (!active?.quoteIds) return;
   const quote = quotes.find(q => q.id === active!.quoteIds![page % active!.quoteIds!.length])!;
-  room.showQuote(active.focus, quote[getLocale()], quote[getLocale() === 'vi' ? 'zh' : 'vi'].replace('\n', ' '), active.kind === 'book', active.object.rotation.y);
+  const secondary = quote[getLocale() === 'vi' ? 'zh' : 'vi'].replace('\n', ' ');
+  if (active.kind === 'book') {
+    // Books carry their note on the 3D page itself, so it turns with the paper.
+    ui.hidePage();
+    room.showQuote(active.focus, quote[getLocale()], secondary, true, active.object.rotation.y);
+  } else {
+    room.quoteGroup.visible = false;
+    ui.showPage({ eyebrow: t('A LITTLE NOTE FOR YOU'), lines: quote[getLocale()].split('\n'), secondary, page: page % active.quoteIds.length + 1, total: active.quoteIds.length }, pageTurn);
+  }
+  pageTurn = false;
   document.querySelector('#world-canvas')!.setAttribute('aria-label', `${t(active.label)}. ${quote[getLocale()].replace('\n', ' ')}`);
+}
+/** Actions happen in place: the room answers without leaving the overview. */
+function perform(entry: InteractableDefinition) {
+  if (entry.id === 'brush-writing') { calligraphy.open(); return; }
+  if (entry.id === 'tea-ritual') {
+    if (room.pouring) return;
+    room.pourTea(); audio.pour(); setTimeout(() => puffs.emit('steam', room.teaCup, 14), 1400);
+    residents.forEach(pet => pet.interestedIn(room.teaCup.toArray()));
+    ui.toast('茶香慢慢散开了。'); discovery.record('tea-ritual'); return;
+  }
+  if (entry.id === 'mochi-treat') {
+    residents.forEach(pet => pet.interestedIn(entry.focus.toArray()));
+    ui.toast('Mochi 闻到水果的香味了。'); discovery.record('mochi-treat'); return;
+  }
+  if (entry.id === 'plum-branch') {
+    const count = room.blossomCount;
+    ui.toast(getLocale() === 'vi' ? `Cành mai đã nở ${count} bông. Mỗi ngày bạn ghé, mai nở thêm một bông.` : `梅枝开了 ${count} 朵。你每来一天，就多开一朵。`); return;
+  }
+  if (entry.id.startsWith('lantern-')) {
+    entry.act?.(); audio.click();
+    ui.toast(room.lampOn[Number(entry.id.slice(8))] ? '灯亮了。' : '灯熄了。'); return;
+  }
+  entry.act?.();
 }
 function activate(entry: InteractableDefinition) {
   ui.dismissInstructions();
+  if (entry.kind === 'action') { perform(entry); return; }
   if (entry.kind === 'pet') {
     const pet = residents.find(pet => pet.definition.id === entry.id)!;
+    pet.pat(); puffs.burst('heart', pet.model.root.position.clone().add(new THREE.Vector3(0, .32, 0)), 4); audio.cloth();
     ui.toast(`${pet.definition.name} ${t(stateLabels[pet.state])}. ${t('陪它一会儿吧。')}`);
     pet.interestedIn(pet.model.root.position.toArray()); return;
   }
@@ -101,7 +171,7 @@ function leaveFocus() {
   canvas.setAttribute('aria-label', t('可探索的三维小屋')); canvas.focus({ preventScroll: true });
 }
 document.querySelector('#leave-focus')!.addEventListener('click', leaveFocus);
-document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; quoteDelay = .76; turning = { entry: active, progress: 0 }; });
+document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; ui.hidePage(); quoteDelay = .76; pageTurn = true; turning = { entry: active, progress: 0 }; });
 document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); ui.showInstructions(); });
 function changeTime(mode: TimeMode) { time.set(mode); ui.setTime(mode); audio.setTime(mode); }
 // An explicit time choice carries back to the entrance and cinema as the site theme.
@@ -110,11 +180,7 @@ document.querySelectorAll<HTMLButtonElement>('button[data-time]').forEach(b => b
 function onKeyDown(e: KeyboardEvent) { if (e.key === 'Escape') { if (journal?.isOpen) journal.close(); else leaveFocus(); } }
 window.addEventListener('keydown', onKeyDown);
 const soundButton = document.querySelector<HTMLButtonElement>('#sound')!;
-function updateSoundButton() {
-  soundButton.setAttribute('aria-pressed', String(audio.on));
-  soundButton.setAttribute('aria-label', t(audio.on ? '关闭声音' : '打开声音')); soundButton.title = t(audio.on ? '关闭声音' : '打开声音');
-  soundButton.innerHTML = `<i data-lucide="${audio.on ? 'volume-2' : 'volume-x'}"></i>`; icons();
-}
+function updateSoundButton() { ui.setSound(audio.on); }
 soundButton.addEventListener('click', async () => {
   try {
     const enabled = await audio.toggle(); updateSoundButton();
@@ -127,14 +193,15 @@ function changeWeather() {
   ui.toast(raining ? '正在下雨' : '雨停了');
 }
 document.querySelector('#weather')!.addEventListener('click', changeWeather);
-journal = new Journal(discovery, interactions, id => { const entry = interactions.get(id); if (entry) activate(entry); }, () => { audio.music = !audio.music; if (audio.music && !audio.on) ui.toast('轻音乐已准备好，打开右上角声音即可聆听。'); return audio.music; }, () => audio.music);
+journal = new Journal(discovery, interactions, id => { const entry = interactions.get(id); if (entry) activate(entry); }, () => { audio.music = !audio.music; if (audio.music && !audio.on) ui.toast('轻音乐已准备好，打开「音」即可聆听。'); return audio.music; }, () => audio.music,
+  { get: () => painter.enabled, toggle: () => { setLook(!painter.enabled, true); return painter.enabled; } });
 
 function refreshLanguage() {
   ui.refreshLanguage(); ui.setTime(time.mode); updateSoundButton();
   const raining = weather.mode === 'rain';
   ui.setWeather(raining);
   ui.setPetState(residents[0].state);
-  room.refreshLanguage(); journal?.refresh();
+  room.refreshLanguage(); journal?.refresh(); calligraphy.refreshLanguage();
   if (active) { ui.focus(active.label, (active.quoteIds?.length ?? 0) > 1); if (quoteDelay <= 0) showPage(); }
   else canvas.setAttribute('aria-label', t('可探索的三维小屋'));
 }
@@ -151,21 +218,29 @@ canvas.addEventListener('pointerdown', e => { fingers.add(e.pointerId); down.set
 canvas.addEventListener('pointermove', e => {
   if (down.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) > 5 && e.buttons) { dragging = true; ui.dismissInstructions(); }
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
-  const hit = !active && !dragging && !journal?.isOpen ? interactions.hit(ray, scene) : undefined;
-  const tooltip = document.querySelector<HTMLElement>('#tooltip')!; tooltip.hidden = !hit;
-  if (hit) ui.showTooltip(hit.label, e.clientX, e.clientY);
+  const hit = !active && !dragging && !journal?.isOpen && !calligraphy.isOpen ? interactions.hit(ray, scene) : undefined;
+  if (hit) ringAround(hit); else ui.hideHover();
   canvas.style.cursor = hit ? 'pointer' : dragging ? 'grabbing' : 'grab';
 });
 canvas.addEventListener('pointerup', e => {
   fingers.delete(e.pointerId);
-  if (dragging || active || journal?.isOpen || fingers.size) return;
+  if (dragging || active || journal?.isOpen || calligraphy.isOpen || fingers.size) return;
   pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(pointer, camera.camera);
   const hit = interactions.hit(ray, scene); if (hit) activate(hit);
-  (document.querySelector('#tooltip') as HTMLElement).hidden = true;
+  ui.hideHover();
 });
 canvas.addEventListener('wheel', () => ui.dismissInstructions(), { passive: true });
 canvas.addEventListener('pointercancel', e => { fingers.delete(e.pointerId); dragging = true; });
-canvas.addEventListener('pointerleave', () => { (document.querySelector('#tooltip') as HTMLElement).hidden = true; });
+canvas.addEventListener('pointerleave', () => ui.hideHover());
+// The ink ring circles the hovered object's bounds, projected to the screen.
+const ringBox = new THREE.Box3(), ringSphere = new THREE.Sphere(), ringPoint = new THREE.Vector3();
+function ringAround(entry: InteractableDefinition) {
+  ringBox.setFromObject(entry.object).getBoundingSphere(ringSphere);
+  ringPoint.copy(ringSphere.center).project(camera.camera);
+  const view = camera.camera, pixelsPerUnit = innerHeight / ((view.top - view.bottom) / view.zoom);
+  const size = Math.min(Math.max(ringSphere.radius * 2 * pixelsPerUnit * 1.15, 56), 320);
+  ui.showRing(entry.id, entry.label, (ringPoint.x + 1) / 2 * innerWidth, (1 - ringPoint.y) / 2 * innerHeight, size);
+}
 const clock = new THREE.Clock(); let elapsed = 0;
 const visibility = () => { void audio.visibility(document.hidden); clock.getDelta(); };
 document.addEventListener('visibilitychange', visibility);
@@ -173,7 +248,7 @@ renderer.setAnimationLoop(() => {
   if (document.hidden) return;
   const dt = Math.min(clock.getDelta(), .05); elapsed += dt;
   camera.update(dt); time.update(dt, elapsed, weather.mode === 'rain'); room.update(elapsed, reducedMotion);
-  weather.update(dt, reducedMotion); ambience.update(dt, elapsed, time.mode, weather.mode === 'rain', reducedMotion); audio.update(dt, elapsed);
+  weather.update(dt, reducedMotion); puffs.update(dt, reducedMotion); ambience.update(dt, elapsed, time.mode, weather.mode === 'rain', reducedMotion); audio.update(dt, elapsed);
   residents.forEach(pet => pet.update(dt, elapsed, { time: time.mode, rain: weather.mode === 'rain' }));
   if (active) { openAmount = THREE.MathUtils.damp(openAmount, 1, 3, dt); active.open?.(openAmount); }
   readingLight.intensity = THREE.MathUtils.damp(readingLight.intensity, active ? 1.4 : 0, 2, dt);
@@ -182,9 +257,14 @@ renderer.setAnimationLoop(() => {
   if (quoteDelay > 0) { quoteDelay -= dt; if (quoteDelay <= 0) { showPage(); document.querySelector<HTMLButtonElement>('#leave-focus')?.focus({ preventScroll: true }); } }
   petReadoutTimer += dt;
   if (petReadoutTimer > 30) { petReadoutTimer = 0; ui.setDiscoveries(discovery.count, discoveries.length); journal?.refresh(); }
-  renderer.render(scene, camera.camera);
+  halos.update(); windowLight.update(time.mode, dt, weather.mode === 'rain');
+  nightInk = THREE.MathUtils.damp(nightInk, time.mode === 'night' ? 1 : 0, 1.4, dt);
+  painter.render(scene, camera.camera, nightInk);
 });
 ui.ready();
+// First visit: a three-step guide replaces the hint line; afterwards the hint stays as before.
+const guided = (() => { try { return localStorage.getItem('sua-house-guide') === 'done'; } catch { return true; } })();
+if (!guided) setTimeout(() => ui.startGuide(() => { try { localStorage.setItem('sua-house-guide', 'done'); } catch { /* Shows again next visit. */ } canvas.focus({ preventScroll: true }); }), 900);
 const disposeWorldTools = registerWorldTools({
   state: () => ({ time: time.mode, weather: weather.mode, discoveries: discovery.count, objects: interactions.entries.map(i => ({ id: i.id, label: t(i.label), kind: i.kind })), pets: residents.map(p => ({ id: p.definition.id, state: p.state, location: p.current })), reading: active?.id ?? null }),
   configure: (mode, rain) => { if (mode) changeTime(mode); if (rain !== undefined && rain !== (weather.mode === 'rain')) changeWeather(); },
@@ -193,7 +273,7 @@ const disposeWorldTools = registerWorldTools({
 });
 if (import.meta.hot) import.meta.hot.dispose(() => {
   stopLocaleListener(); disposeWorldTools();
-  renderer.setAnimationLoop(null); camera.dispose(); audio.dispose(); renderer.dispose();
+  renderer.setAnimationLoop(null); camera.dispose(); audio.dispose(); painter.dispose(); renderer.dispose();
   window.removeEventListener('keydown', onKeyDown);
   window.removeEventListener('resize', resize); document.removeEventListener('visibilitychange', visibility);
   scene.traverse(object => { if (object instanceof THREE.Mesh || object instanceof THREE.Points || object instanceof THREE.Line) { object.geometry.dispose(); const materials = Array.isArray(object.material) ? object.material : [object.material]; materials.forEach(m => m.dispose()); } });

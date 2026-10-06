@@ -26,6 +26,11 @@ export class Pet {
     this.model.root.rotation.y = -.3; this.behavior = new PetBehavior(seededRandom(definition.seed));
   }
   interestedIn(position: Position) { this.interest = this.navigation.nearest(position).id; if (this.state === 'sleep') { this.state = 'wake'; this.stateTime = 0; this.duration = 2.5; } else if (!this.route.length) this.duration = Math.min(this.duration, this.stateTime + 2.5); }
+  /** A gentle pat: a sleeping pet wakes; an idle one stretches happily. A walking pet keeps its route. */
+  pat() {
+    if (this.route.length) return;
+    if (this.state === 'sleep') this.enter('wake', 2.4); else this.enter('stretch', 2.2);
+  }
   private enter(state: PetState, duration: number) {
     this.previous = this.state; this.state = state; this.duration = duration; this.stateTime = 0;
     this.event(this.current, state);

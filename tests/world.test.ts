@@ -25,7 +25,7 @@ test('all furniture destinations are reachable, including a safe route home', ()
 });
 
 test('the book and discovery catalog has no missing references or duplicate identities', () => {
-  assert.equal(books.length, 5); assert.ok(quotes.length >= 12); assert.equal(discoveries.length, 12);
+  assert.equal(books.length, 5); assert.ok(quotes.length >= 12); assert.equal(discoveries.length, 15);
   for (const list of [quotes, books, affordances, discoveries]) assert.equal(new Set(list.map(x => x.id)).size, list.length);
   for (const book of books) for (const quote of book.quotes) assert.ok(quotes.some(q => q.id === quote));
   assert.equal(new Set(quotes.map(q => q.category)).size, 6);

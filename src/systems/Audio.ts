@@ -53,6 +53,9 @@ export class RoomAudio {
     source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
   }
   page() { this.rustle(.55, .3, 2100); }
+  /** Tea pouring: a soft stream of filtered noise with a rising pitch as the cup fills. */
+  pour() { [0, .35, .7, 1.05, 1.4].forEach((delay, i) => setTimeout(() => this.rustle(.5, .07, 900 + i * 180), delay * 1000)); }
+  click() { this.tone(880, .12, .04); }
   step() { this.rustle(.075, .045, 550); }
   cloth() { this.rustle(.3, .06, 1100); }
   shutter() { this.rustle(.09, .22, 1600); }

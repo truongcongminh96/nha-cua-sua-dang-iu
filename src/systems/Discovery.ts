@@ -12,6 +12,9 @@ export const discoveries: DiscoveryDefinition[] = [
   { id: 'pet-window', label: '陪 Mochi 在窗边发了会儿呆', hint: '有时，小家伙也会看风景' },
   { id: 'pet-glide', label: '看见 Mochi 轻轻滑翔', hint: '一场借着风的小小旅行' },
   { id: 'shooting-star', label: '看见夜空悄悄划过一颗星', hint: '夜深了，偶尔看看窗外' },
+  { id: 'tea-ritual', label: '泡了一壶热茶', hint: '茶几上的小茶壶' },
+  { id: 'brush-writing', label: '在宣纸上写下一个字', hint: '书桌上铺着一张宣纸' },
+  { id: 'mochi-treat', label: '给 Mochi 留了一点水果', hint: 'Mochi 的果盘' },
 ];
 interface SavedDiscoveries { date: string; ids: string[] }
 export interface LocalStore { getItem(key: string): string | null; setItem(key: string, value: string): void }
