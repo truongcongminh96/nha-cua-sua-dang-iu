@@ -5,6 +5,8 @@ description: Use this skill whenever designing, reviewing, or implementing UI fo
 
 # NineTails Xuan Paper UI
 
+> Trong repo Sữa Bea, đọc kèm [README.md](README.md): tranh minh họa được phép có màu, giao diện thì chỉ dùng mực và đỏ triện.
+
 Treat the interface as a living design book for a game design studio. The visual language is quiet editorial luxury: a Song-dynasty catalog translated into a usable documentation product. Every decorative choice should also help orientation, hierarchy, or status.
 
 ## Visual foundation
