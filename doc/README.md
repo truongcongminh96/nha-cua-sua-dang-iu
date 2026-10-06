@@ -69,7 +69,7 @@ Kiểm chứng (06/10/2026): build, lint, test 26/26. Số mesh trước khi g�
 - **Thanh dấu triện** ở giữa đáy màn hình: 日 昏 夜 │ 雨 音 │ 册 回 序. Nút đang bật thành ô triện đỏ đặc. Màn hình rộng có nhãn chữ dưới mỗi nút; mobile chỉ hiện chữ Hán và trải hết bề ngang.
 - **Rê chuột vào đồ vật:** một vòng mực elip dẹt (theo góc nhìn nghiêng) vẽ dần quanh đồ vật, có thêm một nét phụ màu đỏ triện; nhãn tên có dấu kim cương đỏ nằm ngay phía trên vòng.
 - **Hướng dẫn lần đầu:** 3 bước (看 ngắm, 圈 chạm, 册 sổ). Xong thì lưu `sua-house-guide`.
-- **Đọc:** lời nhắn hiện trên trang giấy HTML cạnh đồ vật (mobile: phía dưới), sắc nét, chọn được chữ, trình đọc màn hình đọc được. "Đọc thêm một trang" lật trang giấy. Hàm `Room.showQuote` vẫn giữ để test kiểm tra trang không bị che.
+- **Đọc:** với **sách**, lời nhắn in trên trang sách 3D (`Room.showQuote`) và lật cùng trang giấy; nhãn của canvas chứa nội dung để trình đọc màn hình đọc được. Với **mẩu giấy, bưu thiếp, hộp nhạc, máy ảnh**, lời nhắn hiện trên trang giấy HTML cạnh đồ vật (mobile: phía dưới). Thẻ HTML ẩn ngay khi bắt đầu lật và hiện lại với trang mới. *(Sửa ngày 06/10/2026: bản đầu của giai đoạn 3 bỏ chữ trên trang sách, nên sách mở ra trống và lật trang lệch với thẻ HTML.)*
 - **Sổ 册:** 12 ô dấu. Khám phá được thì đóng dấu chữ Hán riêng (慢 光 信 安 勇 笺 远 曲 忆 窗 翔 星); ô chưa có hiện gợi ý. Khám phá mới hiện thông báo kèm hiệu ứng đóng dấu. Khi đang đọc, thông báo lên phía trên để không che trang.
 - **Đồ vật Trung Hoa thêm:**
   - Đôn sứ men ngọc (绣墩) có đinh tán và mặt thêu chữ 福 thay nệm tròn; Mochi vẫn đáp lên được.

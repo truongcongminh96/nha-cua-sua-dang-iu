@@ -105,11 +105,15 @@ let pageTurn = false;
 function showPage() {
   if (!active?.quoteIds) return;
   const quote = quotes.find(q => q.id === active!.quoteIds![page % active!.quoteIds!.length])!;
-  ui.showPage({
-    eyebrow: t('A LITTLE NOTE FOR YOU'), lines: quote[getLocale()].split('\n'),
-    secondary: quote[getLocale() === 'vi' ? 'zh' : 'vi'].replace('\n', ' '),
-    page: page % active.quoteIds.length + 1, total: active.quoteIds.length,
-  }, pageTurn);
+  const secondary = quote[getLocale() === 'vi' ? 'zh' : 'vi'].replace('\n', ' ');
+  if (active.kind === 'book') {
+    // Books carry their note on the 3D page itself, so it turns with the paper.
+    ui.hidePage();
+    room.showQuote(active.focus, quote[getLocale()], secondary, true, active.object.rotation.y);
+  } else {
+    room.quoteGroup.visible = false;
+    ui.showPage({ eyebrow: t('A LITTLE NOTE FOR YOU'), lines: quote[getLocale()].split('\n'), secondary, page: page % active.quoteIds.length + 1, total: active.quoteIds.length }, pageTurn);
+  }
   pageTurn = false;
   document.querySelector('#world-canvas')!.setAttribute('aria-label', `${t(active.label)}. ${quote[getLocale()].replace('\n', ' ')}`);
 }
@@ -167,7 +171,7 @@ function leaveFocus() {
   canvas.setAttribute('aria-label', t('可探索的三维小屋')); canvas.focus({ preventScroll: true });
 }
 document.querySelector('#leave-focus')!.addEventListener('click', leaveFocus);
-document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; quoteDelay = .76; pageTurn = true; turning = { entry: active, progress: 0 }; });
+document.querySelector('#next-page')!.addEventListener('click', () => { if (!active || turning) return; page++; audio.page(); room.quoteGroup.visible = false; ui.hidePage(); quoteDelay = .76; pageTurn = true; turning = { entry: active, progress: 0 }; });
 document.querySelector('#reset')!.addEventListener('click', () => { leaveFocus(); camera.reset(); ui.showInstructions(); });
 function changeTime(mode: TimeMode) { time.set(mode); ui.setTime(mode); audio.setTime(mode); }
 // An explicit time choice carries back to the entrance and cinema as the site theme.
